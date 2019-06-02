@@ -2,12 +2,24 @@
 permalink: /markdown/
 title: "Markdown"
 author_profile: true
-redirect_from: 
+redirect_from:
   - /md/
   - /markdown.html
 ---
 
-## Locations of key files/directories
+###[YOLOv3 Compression](https://github.com/CHOcho-quan/YOLOv3-Compression)
+Junior year first semester's project. My teammate and I had worked on neural network compression specially on YOLOv3, a fast detection network architecture.
+I was the team leader of the project. Also, I proposed similarity-based pruning and implemented it in our repo.
+
+###[Traffic Courtesy System](https://github.com/CHOcho-quan/Traffic-Courtesy-for-Pedestrian)
+My National Level Innovation and Entrepreneurship Program finished with Prof. Ming Yang. It aimed to build a pre-warning system for drivers to wait for pedestrian according to the rules.
+I was the team leader of the project. Finally the program had also passed the examination of our school.
+
+###[Stock Market Price Predicting](https://github.com/CHOcho-quan/StockMarketPredicting)
+Junior year first semester's project, it's also a [Kaggle Competition](https://www.kaggle.com/c/cs410ei339-fall18-stock-price-prediction) on data science. It aimed to use the pass data to predict the future mid price of a given stock.
+I was the team leader of the project. Finally we got 8th place on the private board among total 57 groups.
+
+<!-- ## Locations of key files/directories
 
 * Basic config options: _config.yml
 * Top navigation bar config: _data/navigation.yml
@@ -25,7 +37,7 @@ redirect_from:
 ## Tips and hints
 
 * Name a file ".md" to have it render in markdown, name it ".html" to render in HTML.
-* Go to the [commit list](https://github.com/academicpages/academicpages.github.io/commits/master) (on your repo) to find the last version Github built with Jekyll. 
+* Go to the [commit list](https://github.com/academicpages/academicpages.github.io/commits/master) (on your repo) to find the last version Github built with Jekyll.
   * Green check: successful build
   * Orange circle: building
   * Red X: error
@@ -88,8 +100,8 @@ Do It Live
 
 ## Unordered Lists (Nested)
 
-  * List item one 
-      * List item one 
+  * List item one
+      * List item one
           * List item one
           * List item two
           * List item three
@@ -103,8 +115,8 @@ Do It Live
 
 ## Ordered List (Nested)
 
-  1. List item one 
-      1. List item one 
+  1. List item one
+      1. List item one
           1. List item one
           2. List item two
           3. List item three
@@ -199,4 +211,4 @@ Still sticking with science and Isaac Newton's E = MC<sup>2</sup>, which should 
 
 ### Variable Tag
 
-This allows you to denote <var>variables</var>.
+This allows you to denote <var>variables</var>. -->

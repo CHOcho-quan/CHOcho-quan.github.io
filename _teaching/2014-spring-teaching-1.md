@@ -1,20 +1,15 @@
 ---
-title: "Teaching experience 1"
+title: "YOLOv3 Compression"
 collection: teaching
 type: "Undergraduate course"
 permalink: /teaching/2014-spring-teaching-1
-venue: "University 1, Department"
-date: 2014-01-01
-location: "City, Country"
+venue: "SJTU, Department of Computer Science"
+date: 2018-12-01
+location: "Shanghai, China"
 ---
 
-This is a description of a teaching experience. You can use markdown like any other post.
+YOLOv3 deep neural network compression
 
-Heading 1
-======
-
-Heading 2
-======
-
-Heading 3
-======
+* Github Address : [YOLOv3 Compression](https://github.com/CHOcho-quan/YOLOv3-Compression)
+* Junior year first semester's project. My teammate and I had worked on neural network compression specially on YOLOv3, a fast detection network architecture.
+* I was the team leader of the project. Also, I proposed similarity-based pruning and implemented it in our repo.

@@ -1,28 +1,19 @@
 ---
 permalink: /markdown/
-title: "Projects"
+title: "Personal Statement"
 author_profile: true
 redirect_from:
   - /md/
   - /markdown.html
 ---
 
-### YOLOv3 Compression
-* Github Address : [YOLOv3 Compression](https://github.com/CHOcho-quan/YOLOv3-Compression)
-* Junior year first semester's project. My teammate and I had worked on neural network compression specially on YOLOv3, a fast detection network architecture.
-* I was the team leader of the project. Also, I proposed similarity-based pruning and implemented it in our repo.
 
-### Traffic Courtesy System
-* Github Address : [Traffic Courtesy System](https://github.com/CHOcho-quan/Traffic-Courtesy-for-Pedestrian)
-* My National Level Innovation and Entrepreneurship Program finished with Prof. Ming Yang. It aimed to build a pre-warning system for drivers to wait for pedestrian according to the rules.
-* I was the team leader of the project. Finally the program had also passed the examination of our school.
 
-### Stock Market Price Predicting
-* Github Address : [Stock Market Price Predicting](https://github.com/CHOcho-quan/StockMarketPredicting)
-* Junior year first semester's project, it's also a [Kaggle Competition](https://www.kaggle.com/c/cs410ei339-fall18-stock-price-prediction) on data science. It aimed to use the pass data to predict the future mid price of a given stock.
-* I was the team leader of the project. Finally we got 8th place on the private board among total 57 groups.
+Nothing now
 
-### More on my [Github](https://github.com/CHOcho-quan)
+
+
+
 <!-- ## Locations of key files/directories
 
 * Basic config options: _config.yml

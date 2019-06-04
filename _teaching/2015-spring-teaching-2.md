@@ -1,20 +1,15 @@
 ---
-title: "Teaching experience 2"
+title: "Traffic Courtesy System"
 collection: teaching
 type: "Workshop"
-permalink: /teaching/2015-spring-teaching-1
-venue: "University 1, Department"
-date: 2015-01-01
-location: "City, Country"
+permalink: /teaching/2015-spring-teaching-2
+venue: "SJTU, Department of Automation"
+date: 2018-05-30
+location: "Shanghai, China"
 ---
 
-This is a description of a teaching experience. You can use markdown like any other post.
+A pre-warning system for drivers to wait for pedestrian according to the rules.
 
-Heading 1
-======
-
-Heading 2
-======
-
-Heading 3
-======
+* Github Address : [Traffic Courtesy System](https://github.com/CHOcho-quan/Traffic-Courtesy-for-Pedestrian)
+* My National Level Innovation and Entrepreneurship Program finished with Prof. Ming Yang. It aimed to build a pre-warning system for drivers to wait for pedestrian according to the rules.
+* I was the team leader of the project. Finally the program had also passed the examination of our school.

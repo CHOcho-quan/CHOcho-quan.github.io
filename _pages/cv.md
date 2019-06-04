@@ -9,11 +9,12 @@ redirect_from:
 
 {% include base_path %}
 
-Education
+Education Background
 ======
-* B.S. in SJTU, Shanghai Jiaotong University, 2020
+* B.Eng. Control Science and Engineering, Shanghai Jiaotong University, 2016-2020
+* Zhuhai No.1 High School, 2013-2016
 
-Work experience
+Research experience
 ======
 * Summer 2015: Research Assistant
   * Github University
@@ -25,22 +26,13 @@ Work experience
   * Duties included: Merging pull requests
   * Supervisor: Professor Hub
 
-Skills
-======
-* Skill 1
-* Skill 2
-  * Sub-skill 2.1
-  * Sub-skill 2.2
-  * Sub-skill 2.3
-* Skill 3
-
 Publications
 ======
   <ul>{% for post in site.publications %}
     {% include archive-single-cv.html %}
   {% endfor %}</ul>
 
-Talks
+Awards & Achievements
 ======
   <ul>{% for post in site.talks %}
     {% include archive-single-talk-cv.html %}
@@ -54,6 +46,15 @@ Projects
 
   * More projects in my [Github](https://github.com/CHOcho-quan)
 
-Service and leadership
+  Skills
+  ======
+  * Skill 1
+  * Skill 2
+    * Sub-skill 2.1
+    * Sub-skill 2.2
+    * Sub-skill 2.3
+  * Skill 3
+
+Leadership & Activities
 ======
 * Currently signed in to 43 different slack teams

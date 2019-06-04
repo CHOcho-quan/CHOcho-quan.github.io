@@ -9,7 +9,7 @@ redirect_from:
 
 
 
-Hello world
+Having immersed myself for nearly four years in Shanghai Jiao Tong University, one of the top institutions of higher learning in China, I am now ready to embark on the next phase of my academic journey.
 
 
 

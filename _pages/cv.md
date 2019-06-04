@@ -12,8 +12,6 @@ redirect_from:
 Education
 ======
 * B.S. in SJTU, Shanghai Jiaotong University, 2020
-<!-- * M.S. in Jekyll, GitHub University, 2014
-* Ph.D in Version Control Theory, GitHub University, 2018 (expected) -->
 
 Work experience
 ======
@@ -48,7 +46,9 @@ Talks
     {% include archive-single-talk-cv.html %}
   {% endfor %}</ul>
 
-Teaching
+  * More projects in my [Github](https://github.com/CHOcho-quan)
+
+Projects
 ======
   <ul>{% for post in site.teaching %}
     {% include archive-single-cv.html %}

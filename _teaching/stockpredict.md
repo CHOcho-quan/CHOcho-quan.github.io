@@ -1,7 +1,7 @@
 ---
 title: "Stock Market Price Predicting"
 collection: teaching
-type: "Workshop"
+type: "Undergraduate course"
 permalink: /teaching/stockpredict
 venue: "SJTU, Department of Computer Science"
 date: 2018-06-01

@@ -4,7 +4,7 @@ collection: teaching
 type: "More projects"
 permalink: /teaching/2015-spring-teaching-2
 venue: "SJTU"
-date: 9999-99-99
+date: 2020-01-01
 location: "Shanghai, China"
 ---
 

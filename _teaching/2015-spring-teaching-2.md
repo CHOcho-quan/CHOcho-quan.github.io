@@ -1,11 +1,20 @@
 ---
-title: "More"
+title: "Traffic Courtesy System"
 collection: teaching
-type: "More projects"
+type: "Workshop"
 permalink: /teaching/2015-spring-teaching-2
+<<<<<<< HEAD
 venue: "SJTU"
 date: 2020-01-01
+=======
+venue: "SJTU, Department of Automation"
+date: 2018-05-30
+>>>>>>> parent of d70b1b0... refine projects
 location: "Shanghai, China"
 ---
 
-More on my [Github](https://github.com/CHOcho-quan)
+A pre-warning system for drivers to wait for pedestrian according to the rules.
+
+* Github Address : [Traffic Courtesy System](https://github.com/CHOcho-quan/Traffic-Courtesy-for-Pedestrian)
+* My National Level Innovation and Entrepreneurship Program finished with Prof. Ming Yang. It aimed to build a pre-warning system for drivers to wait for pedestrian according to the rules.
+* I was the team leader of the project. Finally the program had also passed the examination of our school.

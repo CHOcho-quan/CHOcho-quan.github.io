@@ -46,13 +46,13 @@ Talks
     {% include archive-single-talk-cv.html %}
   {% endfor %}</ul>
 
-  * More projects in my [Github](https://github.com/CHOcho-quan)
-
 Projects
 ======
   <ul>{% for post in site.teaching %}
     {% include archive-single-cv.html %}
   {% endfor %}</ul>
+
+  * More projects in my [Github](https://github.com/CHOcho-quan)
 
 Service and leadership
 ======

@@ -1,7 +1,7 @@
 ---
 title: "Traffic Courtesy System"
 collection: teaching
-type: "Workshop"
+type: "Innovation and Entrepreneurship Program"
 permalink: /teaching/2015-spring-teaching-2
 venue: "SJTU, Department of Automation"
 date: 2018-05-30

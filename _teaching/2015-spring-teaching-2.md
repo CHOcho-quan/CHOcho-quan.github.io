@@ -3,13 +3,8 @@ title: "Traffic Courtesy System"
 collection: teaching
 type: "Workshop"
 permalink: /teaching/2015-spring-teaching-2
-<<<<<<< HEAD
-venue: "SJTU"
-date: 2020-01-01
-=======
 venue: "SJTU, Department of Automation"
 date: 2018-05-30
->>>>>>> parent of d70b1b0... refine projects
 location: "Shanghai, China"
 ---
 

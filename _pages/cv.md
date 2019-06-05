@@ -1,6 +1,6 @@
 ---
 layout: archive
-title: "CV"
+title: "Quan Luo(罗铨)"
 permalink: /cv/
 author_profile: true
 redirect_from:
@@ -16,14 +16,11 @@ Education Background
 
 Research experience
 ======
-* Summer 2015: Research Assistant
-  * Github University
-  * Duties included: Tagging issues
-  * Supervisor: Professor Git
+* 2017-2018: [Cyber Car Lab](https://cyberc3.sjtu.edu.cn)
+  * Projects: Traffic Courtesy System
+  * Supervisor: Prof. Ming Yang
 
-* Fall 2015: Research Assistant
-  * Github University
-  * Duties included: Merging pull requests
+* 2018-now: [Autonomous Robot Lab](http://robotics.sjtu.edu.cn)
   * Supervisor: Professor Hub
 
 Publications
@@ -34,9 +31,10 @@ Publications
 
 Awards & Achievements
 ======
-  <ul>{% for post in site.talks %}
-    {% include archive-single-talk-cv.html %}
-  {% endfor %}</ul>
+* Intelligent Driving competition of SJTU, second place, 2018
+* VEX Robot competition of SJTU, second place, 2018
+* Second Class Scholarship of SJTU, 2018
+* Third Class Scholarship of SJTU, 2017
 
 Projects
 ======
@@ -46,15 +44,15 @@ Projects
 
   * More projects in my [Github](https://github.com/CHOcho-quan)
 
-  Skills
-  ======
-  * Skill 1
-  * Skill 2
-    * Sub-skill 2.1
-    * Sub-skill 2.2
-    * Sub-skill 2.3
-  * Skill 3
+Skills
+======
+* Good knowledge of computer vision and deep learning
+* Skilled in Python and C++ programing languages
+* Skilled in Pytorch and Keras deep learning framework
+* Fluent academic communication ability in English
 
 Leadership & Activities
 ======
-* Currently signed in to 43 different slack teams
+* Vice president of SJTU Hiking Club
+* Vice header of SJTU EEE debate team, member of SJTU debate team
+* Interested in playing with robots, violin, guitar and comic drawing

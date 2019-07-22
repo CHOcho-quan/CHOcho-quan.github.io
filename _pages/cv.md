@@ -21,7 +21,7 @@ Research experience
   * Supervisor: Prof. Ming Yang
 
 * 2018-now: [Autonomous Robot Lab](http://robotics.sjtu.edu.cn)
-  * Supervisor: Professor Hub
+  * Supervisor: Professor Hesheng Wang
 
 Publications
 ======
@@ -31,6 +31,7 @@ Publications
 
 Awards & Achievements
 ======
+* NXP Cyber Car Race of East China Division, second prize, 2019
 * Intelligent Driving competition of SJTU, second place, 2018
 * VEX Robot competition of SJTU, second place, 2018
 * Second Class Scholarship of SJTU, 2018

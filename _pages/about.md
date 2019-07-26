@@ -14,4 +14,4 @@ redirect_from:
 
 * I have also worked with [Prof. Ming Yang](http://www.automation.sjtu.edu.cn/ShowPeople.aspx?info_id=1635&info_lb=590&flag=98) before on the field of self-driving car and finish my [National Level Innovation and Entrepreneurship Program](https://github.com/CV-PrewarningSystem) for college students there.
 
-* I will be applying CS or CSE graduate program starting Fall 2020, take a look at my CV if you're interested.
+* I will be applying ECE or CSE graduate program starting Fall 2020, take a look at my CV if you're interested.

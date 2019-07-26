@@ -14,6 +14,14 @@ Education Background
 * B.Eng. Control Science and Engineering, Shanghai Jiaotong University, 2016-2020
 * Zhuhai No.1 High School, 2013-2016
 
+Grades(GPA)
+======
+* Freshmen Year: 84.64 / 100
+* Sophomore Year: 87.65 / 100
+* Senior Year: 90.59 / 100
+
+Always Improving & Top 10% after the second semester of my sophomore year.
+
 Research experience
 ======
 * 2017-2018: [Cyber Car Lab](https://cyberc3.sjtu.edu.cn)
@@ -23,14 +31,9 @@ Research experience
 * 2018-now: [Autonomous Robot Lab](http://robotics.sjtu.edu.cn)
   * Supervisor: Professor Hesheng Wang
 
-Publications
-======
-  <ul>{% for post in site.publications %}
-    {% include archive-single-cv.html %}
-  {% endfor %}</ul>
-
 Awards & Achievements
 ======
+* Patent for Invention, Traffic Courtesy System (Application number: CN201810363236.X)
 * NXP Cyber Car Race of East China Division, second prize, 2019
 * Intelligent Driving competition of SJTU, second place, 2018
 * VEX Robot competition of SJTU, second place, 2018

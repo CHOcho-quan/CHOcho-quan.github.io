@@ -2,7 +2,7 @@
 title: "AirSim UAV Competition"
 collection: teaching
 type: "Competition"
-permalink: /teaching/XXL.md
+permalink: /teaching/AirSim.md
 venue: "SJTU, Department of Automation"
 date: 2019-06-01
 location: "Shanghai, China"

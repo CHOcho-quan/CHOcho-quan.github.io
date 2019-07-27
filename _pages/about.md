@@ -18,6 +18,6 @@ redirect_from:
 
 What's New
 ======
-* My team get 8th place out of 34 teams from different university in the High Score UAV Preliminary Competition. Selected by Amov Lab to get training on UAV in Chengdu.
+* My team get 9th place out of 34 teams from different university in the [High Score UAV Preliminary Competition](http://drone.sjtu.edu.cn/contest/) and successfully get into the final round of the competition. Selected by Amov Lab to get training on UAV in Chengdu.
 * My team get second prize in NXP Cyber Car Race of East China Division.
-* My project working on traffic courtesy system has successfully applied for a patent for invention.
+* My project working on traffic courtesy system has successfully applied a patent for invention.

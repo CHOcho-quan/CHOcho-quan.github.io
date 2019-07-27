@@ -52,7 +52,7 @@ Skills
 ======
 * Good knowledge of computer vision and deep learning, skilled in Pytorch and Keras deep learning framework
 * Skilled in Python and C++ programing languages
-* Skilled in using ROS and Ubuntu
+* Skilled in using ROS and Ubuntu(Linux)
 * Fluent academic communication ability in English
 
 Leadership & Activities

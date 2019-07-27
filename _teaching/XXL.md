@@ -2,7 +2,7 @@
 title: "Mobile Game Playing Based on Robots"
 collection: teaching
 type: "Undergraduate course"
-permalink: /teaching/XXL.md
+permalink: /teaching/XXL
 venue: "SJTU, Department of Automation"
 date: 2019-06-01
 location: "Shanghai, China"

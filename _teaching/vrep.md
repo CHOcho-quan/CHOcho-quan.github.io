@@ -2,7 +2,7 @@
 title: "Six-foot Robot Motion Planning on VREP"
 collection: teaching
 type: "Undergraduate course"
-permalink: /teaching/vrep.md
+permalink: /teaching/vrep
 venue: "SJTU, Department of Automation"
 date: 2018-06-01
 location: "Shanghai, China"

@@ -50,9 +50,9 @@ Projects
 
 Skills
 ======
-* Good knowledge of computer vision and deep learning
+* Good knowledge of computer vision and deep learning, skilled in Pytorch and Keras deep learning framework
 * Skilled in Python and C++ programing languages
-* Skilled in Pytorch and Keras deep learning framework
+* Skilled in using ROS and Ubuntu
 * Fluent academic communication ability in English
 
 Leadership & Activities

@@ -9,11 +9,6 @@ redirect_from:
 
 {% include base_path %}
 
-Education Background
-======
-* B.Eng. Control Science and Engineering, Shanghai Jiaotong University, 2016-2020
-* Zhuhai No.1 High School, 2013-2016
-
 Grades(GPA)
 ======
 * Freshmen Year: 84.64 / 100
@@ -24,11 +19,13 @@ Always Improving & Top 10% after the second semester of my sophomore year.
 
 Research experience
 ======
-* 2017-2018: [Cyber Car Lab](https://cyberc3.sjtu.edu.cn)
-  * Projects: Traffic Courtesy System
+* 2017-2019: [Cyber Car Lab](https://cyberc3.sjtu.edu.cn)
+  * Research Focus : Object Detection & Computer Vision
+  * Projects : Traffic Courtesy System, Rainwiper Filter
   * Supervisor: Prof. Ming Yang
 
-* 2018-now: [Autonomous Robot Lab](http://robotics.sjtu.edu.cn)
+* 2019-now: [Autonomous Robot Lab](http://robotics.sjtu.edu.cn)
+  * Research Focus : Trajectory Planning & State Estimation
   * Supervisor: Professor Hesheng Wang
 
 Awards & Achievements
@@ -54,6 +51,11 @@ Skills
 * Skilled in Python and C++ programing languages
 * Skilled in using ROS and Ubuntu(Linux)
 * Fluent academic communication ability in English
+
+Education Background
+======
+* B.Eng. Control Science and Engineering, Shanghai Jiaotong University, 2016-2020
+* Zhuhai No.1 High School, 2013-2016
 
 Leadership & Activities
 ======

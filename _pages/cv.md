@@ -13,7 +13,7 @@ Grades(GPA)
 ======
 * Freshmen Year: 84.64 / 100
 * Sophomore Year: 87.65 / 100
-* Senior Year: 90.59 / 100
+* Junior Year: 90.59 / 100
 * Total : 87.57 / 100
 
 Always Improving & Top 10% after the second semester of my sophomore year.
@@ -21,7 +21,7 @@ Always Improving & Top 10% after the second semester of my sophomore year.
 Research experience
 ======
 * 2017-2019: [Cyber Car Lab](https://cyberc3.sjtu.edu.cn)
-  * Research Focus : Object Detection & Computer Vision
+  * Research Focus : Object Detection & Autonomous Car
   * Projects : Traffic Courtesy System, Rainwiper Filter
   * Supervisor: Prof. Ming Yang
 

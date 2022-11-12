@@ -1,18 +1,158 @@
 ---
-title: How Comes the Blog
+title: 双重检查锁定模式(Double-Checked Initialization Pattern)的陷阱
 author: Quan
+tag: [Concurrency, C++, Singleton]
+category: C++ Low-level Concurrency
+date: 2022-11-11
 ---
 
-Back in my high school years, I was in the literature club of our school. During my undergrad years, I won the third-class award of a [Hint Fiction Competition](https://www.sohu.com/a/201715543_657731) in SJTU and started to write more original fictions. Though I do not like to publish my fiction mostly, there's some of them I do want to show (off, maybe).
+> This article is translated from [Jeff Preshing's blog](https://preshing.com/20130930/double-checked-locking-is-fixed-in-cpp11/), which helps me a lot with understanding the low-level insight of C++ concurrency. I'll try to translate it correctly to my best knowledge and probably add some of my experiment results & comments.
 
-![Fragment Hint Fiction Competition](images/hint_fiction.jpg)
+## 什么是双重检查锁定模式(DCLP)
 
-As a hiker (I was the vice president of our [outdoor club](https://www.sjtuoutdoor.com/)), U.S. is one of the best places to explore in the world. After coming to UC San Diego, I started to go out for hiking & camping. Back in China, I wrote strategy for each trail that I've been to SJTU outdoor forum. Here I still want to record my personal view of each national parks / trails.
+假设你需要实现一个<font color=red><b>线程安全</b></font>的单例类([Singleton](https://en.wikipedia.org/wiki/Singleton_pattern))的设计模式，最简单直接的方法当然是直接加锁。这种情况下，两个线程(thread)同时调用`Singleton::getInstance()`时，只有其中一个会创建实例。
 
-![SJTU OutDoor Club](images/outdoor.jpg)
+```cpp
+class Singleton {
+ public:
+    Singleton* getInstance() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        Singleton* tmp = loadSingleton();
+        if (tmp == nullptr) {
+            tmp = new Singleton();
+            storeSingleton(tmp);
+        }
+    }
+    // other codes omitted
+};
+```
 
-The time has come to my first internship in the US. One day while I'm working on a tough problem about C++ concurrency, I found an amazing [blog](https://preshing.com/20130930/double-checked-locking-is-fixed-in-cpp11/) that resolved my question so well that I wanted to translate it into Chinese and shared it with more people. However I gave up after failing to find somewhere proper to write the article.
+当然很明显这样的程序有着很大的缺陷。虽然锁本身并不会带来很大的overhead，但是锁竞争(Lock Contention)会。在上面的代码里，如果有很多的线程同时需要调用单例类(也是一个常见的use case)，整个程序会变得很慢。如果线程数目scale up，程序的contention将会非常严重。
 
-Well that's briefly why the blog is here, whose name Μνημοσύνη follows the goddess in charge of memory in the Greek Mythology. Hopefully it will become my memory goddess and always keep my joys and sorrows.
+在这个设计模式中，一种经常被提起的设计方式就是DCLP。尽管现如今很多人都会选择用local static或call once的方式实现，DCLP仍旧是经典的模式之一。早年间我写单例类的codes基本都是下面这样，也是DCLP最常见的形式
 
-Now the blog is here and there's no excuse for me to be lazy. Let's get hands dirty, keep thinking & keep writing.
+```cpp
+class Singleton {
+ public:
+    Singleton* getInstance() {
+        Singleton* tmp = loadSingleton();
+        if (tmp == nullptr) {
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (tmp == nullptr) {
+                tmp = new Singleton();
+                storeSingleton(tmp);
+            }
+        }
+    }
+    // other codes omitted
+};
+```
+
+那么问题来了，以上这段经常出现在单例教学的C++代码究竟有什么陷阱呢？
+
+## Break down to Low Level
+
+我们都知道为了加速程序，编译器(compiler)和处理器(Processor)会分别在编译时和运行时对指令进行重排(reorder)。由于大多数情况下，一行C++代码很可能并不是原子性的，在重排 / 多线程的语境下，会发生非常多的问题。这里请大家把目光放到创建Singleton的这行代码
+
+```cpp
+tmp = new Singleton();
+// To address it simpler let's do some research on
+int* n = new int(3);
+```
+
+初始化一个类会让汇编变得复杂，考虑底下初始化一个整数指针，在我的电脑上用gcc编译成汇编(`gcc -S`)会看到以下的codes
+
+```x86asm
+call operator new(unsigned long)
+mov DWORD PTR [rax], 3
+mov QWORD PTR n[rip], rax
+```
+
+简单来讲就是这一行code一共需要三步完成
+1. 申请一块内存(operator new)
+2. 初始化内存地址(initialization)
+3. 将指针指向初始化后的内存地址
+
+乍一看毫无问题，然而我们假设处理器进行了reorder，执行顺序变成了1 -> 3 -> 2呢？如果此时线程I执行到了创建Singleton这一步，由于指令重排先执行完成了1和3，在2还没有执行的时候，另一个线程II恰好执行到了第一次check nullptr，危险的事情就发生了！此时线程II将直接返回一个未初始化的内存地址，使用它的程序将会产生无法预知的结果。
+
+```cpp
+class Singleton {
+ public:
+    Singleton* getInstance() {
+        Singleton* tmp = loadSingleton();
+        if (tmp == nullptr) { // <--------- 线程II执行到此，发现指针并不为空！
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (tmp == nullptr) {
+                sth = new(); // 1.申请内存地址
+                tmp = sth; // 3.指针指向初始化后的内存地址
+                // <--------- 线程I执行到此
+                sth = Singleton(); // 2.初始化
+                // ...
+            }
+        }
+    }
+    // other codes omitted
+};
+```
+
+> 更详细的DCLP内容可以参考[Meyers-Alexandrescu的论文](https://www.aristeia.com/Papers/DDJ_Jul_Aug_2004_revised.pdf)。
+
+## 什么才是正确的DCLP -- C++11的Acquire & Release Fence
+
+C++11的重要之处，就是它填补了此前多线程中无可空缺的一部分语义，在C++11之前，没有任何办法能够合理地实现DCLP这一功能(当然指的是C++语法本身里没有啦、大佬总是会有办法的)。而到了C++11，atmoic能帮你解决这一切。正确的做法如下
+
+```cpp
+std::atomic<Singleton*> Singleton::m_instance;
+
+class Singleton {
+ public:
+    Singleton* getInstance() {
+        Singleton* tmp = m_instance.load(std::memory_order_acquire); // acquire fence
+        if (tmp == nullptr) {
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (tmp == nullptr) {
+                tmp = new Singleton();
+                m_instance.store(tmp, std::memory_order_release); // release fence
+            }
+        }
+    }
+    // other codes omitted
+};
+```
+
+现在这个codes即便是在多核系统(multi-core system)下都能非常好地运行，因为memory fence的同步(sychronize with)语义保证了所有的改动都能被需要的线程所看到(下图引自[Jeff Preshing's blog](https://preshing.com/20130930/double-checked-locking-is-fixed-in-cpp11/))。
+
+![](./images/DCLP_img0.png)
+
+这也是所有错误的DCLP实现所缺的那一环 ———— 同步语义。如果没有memory fence存在，我们根本没办法保证第一个线程所做的修改在第二个线程中是可见的。
+
+## 所以我为什么要用DCLP
+
+是的，单例类已经好多年没人用DCLP去实现了。一个最常见的static local实现就能解决所有的问题，为什么我要研究这些乱七八糟的呢
+```cpp
+Singleton& Singleton::getInstance() {
+    static Singleton instance;
+    return instance;
+}
+```
+
+Well那我想问，static本质上如何保证了这个单例类的线程安全呢？答案是(至少在我的gcc上)DCLP！当然更重要的是，DCLP也不仅仅可以用于单例，线程安全的map之类的数据结构，也可以用到DCLP的实现。当然近来还有很多人喜欢用call_once来实现单例
+
+```cpp
+Singleton* Singleton::instance= nullptr;
+std::once_flag Singleton::initInstanceFlag;
+class MySingleton{
+public:
+    static MySingleton& getInstance(){
+        std::call_once(initInstanceFlag, &MySingleton::initSingleton);
+        return *instance;
+    }
+  // other codes omitted
+};
+```
+
+关于call_once我并没有太多的了解。。但是根据[线程安全Singleton速度实验](http://www.modernescpp.com/index.php/thread-safe-initialization-of-a-singleton)来看，大概率并不是什么efficient的实现方式。所以在没有问题的情况下，想写一个线程安全Singleton最好的方式大概还是local static吧。
+
+## 写在后面
+
+这篇blog本身Jeff还囊括了更多内容，有的我并没有验证、有的以我现在的水平也不能完全理解所以我也并没有翻译。大多数内容还是我自己的实验 & 想法。这个系列(C++ Low-level Concurrency)应该还会继续不短的时间，一方面是翻译Jeff的blog里我认为非常好的部分、另一方面是写一些读《C++ Concurrency in Action》的想法和实验。大概就是这样啦，这篇blog也是最初引发我想开这整个博客的原因，希望能对机缘巧合点进来的人有所帮助啦。

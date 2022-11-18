@@ -1,12 +1,14 @@
 ---
-title: 双重检查锁定模式(Double-Checked Initialization Pattern)的陷阱
+title: 双重检查锁定模式(Double-Checked Locking Pattern)的陷阱
 author: Quan
 tag: [Concurrency, C++, Singleton]
 category: C++ Low-level Concurrency
 date: 2022-11-11
 ---
 
-> This article is translated from [Jeff Preshing's blog](https://preshing.com/20130930/double-checked-locking-is-fixed-in-cpp11/), which helps me a lot with understanding the low-level insight of C++ concurrency. I'll try to translate it correctly to my best knowledge and probably add some of my experiment results & comments.
+> This article is partly referred to & translated from [Jeff Preshing’s blog](https://preshing.com/20130930/double-checked-locking-is-fixed-in-cpp11/), which helps me a lot with understanding the low-level insight of C++ concurrency. I’ll try to convey my understanding of the blog correctly to my best knowledge with my own experiment results & comments.
+
+单例我们用的很多了，所谓“懒汉式”单例也是设计模式中非常常见的一个例子。很多博客、技术帖子都会告诉你，简单的懒汉式单例在多线程的context下，仍旧是不安全的。这篇博客想仔细地告诉你为什么它仍旧不安全，以及解决方案。
 
 ## 什么是双重检查锁定模式(DCLP)
 
@@ -56,11 +58,11 @@ class Singleton {
 
 ```cpp
 tmp = new Singleton();
-// To address it simpler let's do some research on
-int* n = new int(3);
+// To address it simpler let’s do some research on
+int* n = new int(3); // (*)
 ```
 
-初始化一个类会让汇编变得复杂，考虑底下初始化一个整数指针，在我的电脑上用gcc编译成汇编(`gcc -S`)会看到以下的codes
+初始化一个类会让汇编变得复杂，考虑(*)行的代码，初始化一个整数指针，在我的电脑上用gcc编译成汇编(`gcc -S`)会看到以下的codes
 
 ```x86asm
 call operator new(unsigned long)
@@ -99,7 +101,7 @@ class Singleton {
 
 ## 什么才是正确的DCLP -- C++11的Acquire & Release Fence
 
-C++11的重要之处，就是它填补了此前多线程中无可空缺的一部分语义，在C++11之前，没有任何办法能够合理地实现DCLP这一功能(当然指的是C++语法本身里没有啦、大佬总是会有办法的)。而到了C++11，atmoic能帮你解决这一切。正确的做法如下
+C++11的重要之处，就是它填补了此前多线程中无可空缺的一部分语义，在C++11之前，没有任何办法能够合理地实现DCLP这一功能(当然指的是C++语法本身里没有啦、大佬总是会有办法的)。而到了C++11，atomic能帮你解决这一切。正确的做法如下
 
 ```cpp
 std::atomic<Singleton*> Singleton::m_instance;
@@ -120,7 +122,7 @@ class Singleton {
 };
 ```
 
-现在这个codes即便是在多核系统(multi-core system)下都能非常好地运行，因为memory fence的同步(sychronize with)语义保证了所有的改动都能被需要的线程所看到(下图引自[Jeff Preshing's blog](https://preshing.com/20130930/double-checked-locking-is-fixed-in-cpp11/))。
+现在这个codes即便是在多核系统(multi-core system)下都能非常好地运行，因为memory fence的同步(sychronize with)语义保证了所有的改动都能被需要的线程所看到(下图引自[Jeff Preshing’s blog](https://preshing.com/20130930/double-checked-locking-is-fixed-in-cpp11/))。
 
 ![](./images/DCLP_img0.png)
 

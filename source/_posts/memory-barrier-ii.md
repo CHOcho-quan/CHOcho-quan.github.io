@@ -8,7 +8,7 @@ date: 2022-11-22
 
 > This article is partly referred to & translated from [Paul's Memory Barrier Paper](http://www.puppetmastertrading.com/images/hwViewForSwHackers.pdf). Personal thoughts added.
 
-上篇博客，我们通过Git的想法来入门了内存屏障(memory barrier)。但是如果你仔细的研究过，你就会产生新的问题————为什么memory order会发生？保证两个操作之间的相对顺序，听起来这么炫酷的操作硬件是怎么实现的？本篇博客将尝试讲明白上面的问题，但它需要你拥有一定的计算机体系结构(architecture)知识，以及不少的时间。
+上篇博客，我们通过Git的想法来入门了内存屏障(memory barrier)。但是如果你仔细的研究过，你就会产生新的问题————为什么memory reorder会发生？保证两个操作之间的相对顺序，听起来这么炫酷的操作硬件是怎么实现的？本篇博客将尝试讲明白上面的问题，但它需要你拥有一定的计算机体系结构(architecture)知识，以及不少的时间。
 
 ## 回顾体系结构
 

@@ -101,7 +101,7 @@ Larry、Sergey分别在他们的本地将X / Y修改为1，理论上来说他们
 
 ## 内存屏障的类型 & 作用
 
-我们将定义四种内存屏障来解决上面所提到的问题，分别是#LoadLoad / #StoreLoad / #LoadStore / #StoreStore。这四种屏障的名字也就是他们所要解决的问题的名字，举例来说，#StoreStore屏障防止了屏障之前的Store操作被reorder到屏障之后。
+我们将定义四种内存屏障来解决上面所提到的问题，分别是#LoadLoad / #StoreLoad / #LoadStore / #StoreStore。这四种屏障的名字也就是他们所要解决的问题的名字，举例来说，#StoreStore屏障防止了屏障之前的Store操作被reorder到屏障的Store操作之后。
 
 这四种内存屏障和实际CPU的指令有着紧密的联系，尽管不尽相同————CPU指令常常会是以上的几种屏障的组合。理解了这些内存屏障之后，你就能够理解一系列的CPU指令，以及从一个程序员的角度来说，类似C++11的memory ordering到底是什么样的feature，解决了什么问题。
 

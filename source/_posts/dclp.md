@@ -3,7 +3,7 @@ title: 双重检查锁定模式(Double-Checked Locking Pattern)的陷阱
 author: Quan
 tag: [Concurrency, C++, Singleton]
 category: C++ Low-level Concurrency
-date: 2022-11-11
+date: 2022-11-01
 ---
 
 > This article is partly referred to & translated from [Jeff Preshing’s blog](https://preshing.com/20130930/double-checked-locking-is-fixed-in-cpp11/), which helps me a lot with understanding the low-level insight of C++ concurrency. I’ll try to convey my understanding of the blog correctly to my best knowledge with my own experiment results & comments.

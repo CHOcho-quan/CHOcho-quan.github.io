@@ -1,7 +1,9 @@
 ---
 title: 编译器指令重排(Compiler Instruction Reordering)的影响
-date: 2022-11-17 15:28:46
-tags:
+date: 2022-11-11
+author: Quan
+tag: [Concurrency, C++, Memory Barrier]
+category: C++ Low-level Concurrency
 ---
 
 > This article is partly referred to & translated from [Jeff Preshing’s blog](https://preshing.com/20120625/memory-ordering-at-compile-time/). Still experiments are done by myself & some thoughts added.
@@ -140,7 +142,7 @@ void foo() {
 }
 ```
 
-在C++11标准之前我们编译器之后可能会得到以下的代码
+在C++11标准之前我们编译之后可能会得到以下的代码
 ```cpp
 void foo() {
     register int r = B;    // Promote B to a register before checking A.

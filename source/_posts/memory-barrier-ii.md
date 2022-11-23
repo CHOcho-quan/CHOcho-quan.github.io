@@ -8,7 +8,7 @@ date: 2022-11-22
 
 > This article is partly referred to & translated from [Paul's Memory Barrier Paper](http://www.puppetmastertrading.com/images/hwViewForSwHackers.pdf). Personal thoughts added.
 
-上篇博客，我们通过Git的想法来入门了内存屏障(memory barrier)。但是如果你仔细的研究过，你就会产生新的问题————为什么memory reorder会发生？保证两个操作之间的相对顺序，听起来这么炫酷的操作硬件是怎么实现的？本篇博客将尝试讲明白上面的问题，但它需要你拥有一定的计算机体系结构(architecture)知识，以及不少的时间。
+[上篇博客](https://chocho-quan.github.io/2022/11/21/understanding-memory-barrier/)，我们通过Git的想法来入门了内存屏障(memory barrier)。但是如果你仔细的研究过，你就会产生新的问题————为什么memory reorder会发生？保证两个操作之间的相对顺序，听起来这么炫酷的操作硬件是怎么实现的？本篇博客将尝试讲明白上面的问题，但它需要你拥有一定的计算机体系结构(architecture)知识，以及不少的时间。
 
 ## 回顾体系结构
 
@@ -55,7 +55,7 @@ date: 2022-11-22
 
 ![](images/arch.png)
 
-每当CPU想要store时，我们将其先存入Store Buffer并不限期延时本次store操作(load也是同理)。而这本质上就是指令重排————并不是CPU真的把两个指令的顺序调换，而是某一个指令进入buffer并未实际执行就继续了！这也是为什么在上篇博客我们说
+每当CPU想要store时，我们将其先存入Store Buffer并不限期延时本次store操作(load也是同理)。而这本质上就是指令重排————并不是CPU真的把两个指令的顺序调换，而是某一个指令进入buffer并未实际执行就继续了！这也是为什么在[上篇博客](https://chocho-quan.github.io/2022/11/21/understanding-memory-barrier/)我们说
 
 > 由于处理器重排(processor reordering)的存在，修改何时写入内存是未知的
 

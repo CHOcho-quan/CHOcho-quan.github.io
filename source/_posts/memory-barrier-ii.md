@@ -1,5 +1,5 @@
 ---
-title: 从内存屏障(Memory Barriers)到同步语义(Synchronize-with)【中】————从硬件的角度看内存屏障
+title: 内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障
 author: Quan
 tag: [Concurrency, C++, Memory Barrier]
 category: C++ Low-level Concurrency

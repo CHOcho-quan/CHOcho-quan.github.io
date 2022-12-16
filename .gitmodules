@@ -1,0 +1,3 @@
+[submodule "Cactus"]
+	path = themes/cactus
+	url = https://https://github.com/probberechts/hexo-theme-cactus

@@ -13,16 +13,16 @@
 <meta property="og:site_name" content="Quan&#39;s Μνημοσύνη">
 <meta property="og:description" content="This article is partly referred to &amp; translated from Jeff Preshing’s blog. Personal thoughts added.  在第一篇技术博客里，我们就提到了同步语义(Synchronize-with)的重要性。问题在于，在多线程的环境下，谁也不知道处理器实际执行程序的顺序如何。可是我们程序的正确执行，往往需要一">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://chocho-quan.github.io/sync0.png">
-<meta property="og:image" content="https://chocho-quan.github.io/sync1.png">
+<meta property="og:image" content="https://chocho-quan.github.io/images/sync0.png">
+<meta property="og:image" content="https://chocho-quan.github.io/images/sync1.png">
 <meta property="article:published_time" content="2022-12-07T08:00:00.000Z">
-<meta property="article:modified_time" content="2022-12-16T08:15:50.177Z">
+<meta property="article:modified_time" content="2022-12-16T08:17:44.411Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="Concurrency">
 <meta property="article:tag" content="C++">
 <meta property="article:tag" content="Memory Barrier">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://chocho-quan.github.io/sync0.png">
+<meta name="twitter:image" content="https://chocho-quan.github.io/images/sync0.png">
     
     
       
@@ -184,12 +184,12 @@
 <li>一段时间之后线程II看到了<code>g_guard</code>的修改，并且进入了<code>if</code>分支</li>
 <li>线程II启动了Acquire Fence ———— 线程II保证了读到的payload的值至少和上一次读操作一样新(因为我们用Acquire Fence保证了先读<code>g_guard</code>再读<code>g_payload</code>)，至此同步语义完成</li>
 </ol>
-<p><img src="/sync0.png" alt="synchronize"></p>
-<h2 id="Release-Fence-vs-Release-Operations"><a href="#Release-Fence-vs-Release-Operations" class="headerlink" title="Release Fence vs. Release Operations"></a>Release Fence vs. Release Operations</h2><p>我们在DCLP的博客中，曾见到过类似<code>atmoic_var.load(sth, std::memory_order_release)</code>的Release Operation。值得注意的是，它和Release Fence并不等价！Release Fence可以完成Release Operations的功能，但反过来则并不是如此。参考以下的例子：</p>
+<p><img src="/./images/sync0.png" alt="synchronize"></p>
+<h2 id="Release-Fence-vs-Release-Operations"><a href="#Release-Fence-vs-Release-Operations" class="headerlink" title="Release Fence vs. Release Operations"></a>Release Fence vs. Release Operations</h2><p>我们在<a href="https://chocho-quan.github.io/2022/11/01/dclp/">DCLP的博客</a>中，曾见到过类似<code>atmoic_var.load(sth, std::memory_order_release)</code>的Release Operation。值得注意的是，它和Release Fence并不等价！Release Fence可以完成Release Operations的功能，但反过来则并不是如此。参考以下的例子：</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Release Operations</span></span><br><span class="line">tmp = <span class="keyword">new</span> Singleton;</span><br><span class="line">m_instance.<span class="built_in">store</span>(tmp, std::memory_order_release);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Vs. Release Fence</span></span><br><span class="line">tmp = <span class="keyword">new</span> Singleton;</span><br><span class="line">std::<span class="built_in">atomic_thread_fence</span>(std::memory_order_release);</span><br><span class="line">m_instance.<span class="built_in">store</span>(tmp, std:memory_order_relaxed);</span><br></pre></td></tr></table></figure>
 
 <p>比起Fence，Release Operations实际上对内存操作重排(Memory Reordering)的限制要更少。Release Operation只保证了不会重排它之前的任何读写操作 &amp; <font color=red><b>这次store操作</b></font>。而Release Fence则保证了不会重排此前任何的读写操作 &amp; <font color=red><b>之后所有的写操作</b></font>。对Acquire Fence及Acquire Operations也是同理。</p>
-<h2 id="其他实现同步语义的方式"><a href="#其他实现同步语义的方式" class="headerlink" title="其他实现同步语义的方式"></a>其他实现同步语义的方式</h2><p>Acquire &#x2F; Release Fence仅仅是实现同步语义的一种方式。实际上C++11之后，实现它的方式变得多种多样。Jeff整理并列出了以下的这些同步语义的方法，虽然这并不是全部，但也能作为一个参考<br><img src="/sync1.png" alt="synchronize"></p>
+<h2 id="其他实现同步语义的方式"><a href="#其他实现同步语义的方式" class="headerlink" title="其他实现同步语义的方式"></a>其他实现同步语义的方式</h2><p>Acquire &#x2F; Release Fence仅仅是实现同步语义的一种方式。实际上C++11之后，实现它的方式变得多种多样。Jeff整理并列出了以下的这些同步语义的方法(但并不完整~)<br><img src="/./images/sync1.png" alt="synchronize"></p>
 
   </div>
 </article>

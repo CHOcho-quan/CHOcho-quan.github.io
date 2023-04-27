@@ -37,12 +37,11 @@ class Singleton {
 class Singleton {
  public:
     Singleton* getInstance() {
-        Singleton* tmp = loadSingleton();
-        if (tmp == nullptr) {
+        m_instance = loadSingleton();
+        if (m_instance == nullptr) {
             std::lock_guard<std::mutex> lock(mutex_);
-            if (tmp == nullptr) {
-                tmp = new Singleton();
-                storeSingleton(tmp);
+            if (m_instance == nullptr) {
+                m_instance = new Singleton();
             }
         }
     }
@@ -57,7 +56,7 @@ class Singleton {
 我们都知道为了加速程序，编译器(compiler)和处理器(Processor)会分别在编译时和运行时对指令进行重排(reorder)。由于大多数情况下，一行C++代码很可能并不是原子性的，在重排 / 多线程的语境下，会发生非常多的问题。这里请大家把目光放到创建Singleton的这行代码
 
 ```cpp
-tmp = new Singleton();
+m_instance = new Singleton();
 // To address it simpler let’s do some research on
 int* n = new int(3); // (*)
 ```
@@ -81,12 +80,12 @@ mov QWORD PTR n[rip], rax
 class Singleton {
  public:
     Singleton* getInstance() {
-        Singleton* tmp = loadSingleton();
-        if (tmp == nullptr) { // <--------- 线程II执行到此，发现指针并不为空！
+        m_instance = loadSingleton();
+        if (m_instance == nullptr) { // <--------- 线程II执行到此，发现指针并不为空！
             std::lock_guard<std::mutex> lock(mutex_);
-            if (tmp == nullptr) {
+            if (m_instance == nullptr) {
                 sth = new(); // 1.申请内存地址
-                tmp = sth; // 3.指针指向初始化后的内存地址
+                m_instance = sth; // 3.指针指向初始化后的内存地址
                 // <--------- 线程I执行到此
                 sth = Singleton(); // 2.初始化
                 // ...
@@ -109,11 +108,11 @@ std::atomic<Singleton*> Singleton::m_instance;
 class Singleton {
  public:
     Singleton* getInstance() {
-        Singleton* tmp = m_instance.load(std::memory_order_acquire); // acquire fence
-        if (tmp == nullptr) {
+        m_instance.load(std::memory_order_acquire); // acquire fence
+        if (m_instance == nullptr) {
             std::lock_guard<std::mutex> lock(mutex_);
-            if (tmp == nullptr) {
-                tmp = new Singleton();
+            if (m_instance == nullptr) {
+                Singleton* tmp = new Singleton();
                 m_instance.store(tmp, std::memory_order_release); // release fence
             }
         }

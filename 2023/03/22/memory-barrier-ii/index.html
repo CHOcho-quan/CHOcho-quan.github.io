@@ -9,14 +9,14 @@
     <meta name="description" content="This article is partly referred to &amp; translated from Paul’s Memory Barrier Paper. Personal thoughts added.  上篇博客，我们通过Git的想法来入门了内存屏障(memory barrier)。但是如果你仔细的研究过，你就会产生新的问题————为什么memory reorder会发生？保">
 <meta property="og:type" content="article">
 <meta property="og:title" content="内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障">
-<meta property="og:url" content="https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/index.html">
+<meta property="og:url" content="https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/index.html">
 <meta property="og:site_name" content="Quan&#39;s Μνημοσύνη">
 <meta property="og:description" content="This article is partly referred to &amp; translated from Paul’s Memory Barrier Paper. Personal thoughts added.  上篇博客，我们通过Git的想法来入门了内存屏障(memory barrier)。但是如果你仔细的研究过，你就会产生新的问题————为什么memory reorder会发生？保">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://chocho-quan.github.io/images/sys.png">
 <meta property="og:image" content="https://chocho-quan.github.io/images/arch.png">
-<meta property="article:published_time" content="2022-11-22T08:00:00.000Z">
-<meta property="article:modified_time" content="2022-12-16T06:36:03.570Z">
+<meta property="article:published_time" content="2023-03-22T05:00:00.000Z">
+<meta property="article:modified_time" content="2023-09-15T00:26:34.018Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="Concurrency">
 <meta property="article:tag" content="C++">
@@ -80,10 +80,10 @@
     <span id="actions">
       <ul>
         
-        <li><a class="icon" aria-label="Previous post" href="/2022/12/07/acquire-release-fence/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Previous post" href="/2023/05/07/acquire-release-fence/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
         
         
-        <li><a class="icon" aria-label="Next post" href="/2022/11/21/understanding-memory-barrier/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Next post" href="/2023/01/21/understanding-memory-barrier/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
         
         <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
         <li><a class="icon" aria-label="Share post" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
@@ -96,17 +96,17 @@
     <br/>
     <div id="share" style="display: none">
       <ul>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/&text=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/&is_video=false&description=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障&body=Check out this article: https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/&name=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/&t=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&text=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&is_video=false&description=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障&body=Check out this article: https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&name=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&t=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
 </ul>
 
     </div>
@@ -135,7 +135,7 @@
       
     <div class="postdate">
       
-        <time datetime="2022-11-22T08:00:00.000Z" itemprop="datePublished">2022-11-22</time>
+        <time datetime="2023-03-22T05:00:00.000Z" itemprop="datePublished">2023-03-22</time>
         
       
     </div>
@@ -395,17 +395,17 @@
 
     <div id="share-footer" style="display: none">
       <ul>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/&text=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/&is_video=false&description=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障&body=Check out this article: https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/&name=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://chocho-quan.github.io/2022/11/22/memory-barrier-ii/&t=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&text=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&is_video=false&description=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障&body=Check out this article: https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&name=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&t=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
 </ul>
 
     </div>

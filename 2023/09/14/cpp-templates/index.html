@@ -8,17 +8,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
     <meta name="description" content="最近在工作中又遇到了个很大的问题，我在编译自己写的某个库的时候，时间异常地长，如果选择make的线程数量太多（make -j8之类的）甚至会因为内存原因被kill。编译时间也就算了，我左思右想到底哪里会让一个编译的过程需要那么多的内存，整整8G是怎么被编译吃满的。最后我的目光落在了一些模板类上，也由此对模板了解得更加深刻了些。这篇博客主要关注的不是模板的用法，什么继承模板类啦、Non-type模板">
 <meta property="og:type" content="article">
-<meta property="og:title" content="cpp-templates">
+<meta property="og:title" content="C++模板的编译与链接">
 <meta property="og:url" content="https://chocho-quan.github.io/2023/09/14/cpp-templates/index.html">
 <meta property="og:site_name" content="Quan&#39;s Μνημοσύνη">
 <meta property="og:description" content="最近在工作中又遇到了个很大的问题，我在编译自己写的某个库的时候，时间异常地长，如果选择make的线程数量太多（make -j8之类的）甚至会因为内存原因被kill。编译时间也就算了，我左思右想到底哪里会让一个编译的过程需要那么多的内存，整整8G是怎么被编译吃满的。最后我的目光落在了一些模板类上，也由此对模板了解得更加深刻了些。这篇博客主要关注的不是模板的用法，什么继承模板类啦、Non-type模板">
 <meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://chocho-quan.github.io/images/template.jpg">
 <meta property="article:published_time" content="2023-09-14T05:00:00.000Z">
-<meta property="article:modified_time" content="2023-09-15T01:48:51.484Z">
+<meta property="article:modified_time" content="2023-09-15T02:48:03.276Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="C++">
 <meta property="article:tag" content="Template">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://chocho-quan.github.io/images/template.jpg">
     
     
       
@@ -38,7 +40,7 @@
       
     
     <!-- title -->
-    <title>cpp-templates</title>
+    <title>C++模板的编译与链接</title>
     <!-- styles -->
     
 <link rel="stylesheet" href="/css/style.css">
@@ -91,16 +93,16 @@
     <div id="share" style="display: none">
       <ul>
   <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://chocho-quan.github.io/2023/09/14/cpp-templates/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&text=cpp-templates"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&title=cpp-templates"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&is_video=false&description=cpp-templates"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=cpp-templates&body=Check out this article: https://chocho-quan.github.io/2023/09/14/cpp-templates/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&title=cpp-templates"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&title=cpp-templates"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&title=cpp-templates"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&title=cpp-templates"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&name=cpp-templates&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://chocho-quan.github.io/2023/09/14/cpp-templates/&t=cpp-templates"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&text=C++模板的编译与链接"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&title=C++模板的编译与链接"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&is_video=false&description=C++模板的编译与链接"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=C++模板的编译与链接&body=Check out this article: https://chocho-quan.github.io/2023/09/14/cpp-templates/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&title=C++模板的编译与链接"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&title=C++模板的编译与链接"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&title=C++模板的编译与链接"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&title=C++模板的编译与链接"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&name=C++模板的编译与链接&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://chocho-quan.github.io/2023/09/14/cpp-templates/&t=C++模板的编译与链接"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
 </ul>
 
     </div>
@@ -117,14 +119,14 @@
   <header>
     
     <h1 class="posttitle" itemprop="name headline">
-        cpp-templates
+        C++模板的编译与链接
     </h1>
 
 
 
     <div class="meta">
       <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">John Doe</span>
+        <span itemprop="name">Quan</span>
       </span>
       
     <div class="postdate">
@@ -187,6 +189,7 @@
 <p>当你理解了模板的编译，你就不难理解Instantiation Model的合理性了————该文件中拥有了definition &amp; declaration，所以它可以随意地实例化模板类。而由于它已经实例化了模板类，与它链接的文件如果用到的是同样的实例化的模板类，就不会有找不到定义的问题了。到这儿也不难看出两者的优劣，Inclusion Model的问题就是我所遇到的内存、编译时间爆炸的问题，而Explicit Instantiation则太难去完整的考虑你到底需要用到哪些实例化的模板，还容易在不同的文件中重复定义，但却满足了隐藏模板类实现、编译加速的条件。</p>
 <p>但讲到这里，又会带来下一个问题，每个源文件都带这样一份拷贝，假设我有好几份源文件都实例化了<code>Foo&lt;int&gt;</code>，那链接在一起岂不是就重复定义了吗？下一章我们来讲链接器的操作。</p>
 <h2 id="模板的链接"><a href="#模板的链接" class="headerlink" title="模板的链接"></a>模板的链接</h2><p>这一章并没有太多要说的，因为根据<a target="_blank" rel="noopener" href="https://gcc.gnu.org/onlinedocs/gcc/Template-Instantiation.html">gcc官方的文档</a>，链接器会检查所有translation units中的模板实例化，并且最终只保留一个，而由此你的二进制文件也不至于太大。</p>
+<p><img src="/./images/template.jpg" alt="compile and link"></p>
 <h2 id="模板特化"><a href="#模板特化" class="headerlink" title="模板特化"></a>模板特化</h2><p>特化的模板是什么呢？很显然已经不可能再是我们前面所说的一种“宏类似物”了，它就是一个函数模板的实例化，链接器会把它当成一个普通的函数处理。这也是为什么如果你使用的是Inclusion Model，特化模板函数前面必须要加上一个inline关键字，否则就会违反<a href="#a1-one-definition-rule">ODR</a>。</p>
 <p>最后讲一个与今天想讲的模板编译并没有太大关系的小技巧，也算是在这次project中学到的一点东西吧。当你需要特化一些模板，可是特化的模板函数明明和大众的模板函数有大量的重复，如何节省代码呢？<a target="_blank" rel="noopener" href="https://isocpp.org/wiki/faq/templates#template-specialization-piecemeal">C++官方的模板文章</a>里讲到，我们应该把公用的部分放到一个公共的parent函数里，specialization中只做小部分不同的codes。</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt; <span class="keyword">inline</span> <span class="type">void</span> <span class="title">foo_part</span><span class="params">(<span class="type">const</span> T&amp; x)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// ... small amount of code used when T is neither int nor std::string ...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span>&lt;&gt; <span class="keyword">inline</span> <span class="type">void</span> <span class="built_in">foo_part</span>&lt;<span class="type">int</span>&gt;(<span class="type">const</span> <span class="type">int</span>&amp; x) &#123;</span><br><span class="line">    <span class="comment">// ... small amount of code used only when T is int ...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span>&lt;&gt; <span class="keyword">inline</span> <span class="type">void</span> <span class="built_in">foo_part</span>&lt;std::string&gt;(<span class="type">const</span> std::string&amp; x) &#123;</span><br><span class="line">    <span class="comment">// ... small amount of code used only when T is std::string ...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Top &quot;parent&quot; function</span></span><br><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">foo</span><span class="params">(<span class="type">const</span> T&amp; x)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// ... common code that works for all T types ...</span></span><br><span class="line">    <span class="built_in">foo_part</span>(x);</span><br><span class="line">    <span class="comment">// ... more common code that works for all T types ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -230,16 +233,16 @@
     <div id="share-footer" style="display: none">
       <ul>
   <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://chocho-quan.github.io/2023/09/14/cpp-templates/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&text=cpp-templates"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&title=cpp-templates"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&is_video=false&description=cpp-templates"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=cpp-templates&body=Check out this article: https://chocho-quan.github.io/2023/09/14/cpp-templates/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&title=cpp-templates"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&title=cpp-templates"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&title=cpp-templates"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&title=cpp-templates"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&name=cpp-templates&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://chocho-quan.github.io/2023/09/14/cpp-templates/&t=cpp-templates"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&text=C++模板的编译与链接"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&title=C++模板的编译与链接"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&is_video=false&description=C++模板的编译与链接"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=C++模板的编译与链接&body=Check out this article: https://chocho-quan.github.io/2023/09/14/cpp-templates/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&title=C++模板的编译与链接"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&title=C++模板的编译与链接"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&title=C++模板的编译与链接"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&title=C++模板的编译与链接"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://chocho-quan.github.io/2023/09/14/cpp-templates/&name=C++模板的编译与链接&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://chocho-quan.github.io/2023/09/14/cpp-templates/&t=C++模板的编译与链接"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
 </ul>
 
     </div>

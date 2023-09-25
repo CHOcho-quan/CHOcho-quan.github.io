@@ -1,6 +1,7 @@
 ---
 title: C++模板的编译与链接
 date: 2023-09-14
+author: Quan
 tags: [C++, Template]
 category: C++ Language Feature
 ---

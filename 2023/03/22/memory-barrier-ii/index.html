@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="This article is partly referred to &amp; translated from Paul’s Memory Barrier Paper. Personal thoughts added.  上篇博客，我们通过Git的想法来入门了内存屏障(memory barrier)。但是如果你仔细的研究过，你就会产生新的问题————为什么memory reorder会发生？保">
+<meta property="og:type" content="article">
+<meta property="og:title" content="内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障">
+<meta property="og:url" content="https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/index.html">
+<meta property="og:site_name" content="Quan&#39;s Μνημοσύνη">
+<meta property="og:description" content="This article is partly referred to &amp; translated from Paul’s Memory Barrier Paper. Personal thoughts added.  上篇博客，我们通过Git的想法来入门了内存屏障(memory barrier)。但是如果你仔细的研究过，你就会产生新的问题————为什么memory reorder会发生？保">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://chocho-quan.github.io/images/sys.png">
+<meta property="og:image" content="https://chocho-quan.github.io/images/arch.png">
+<meta property="article:published_time" content="2023-03-22T07:00:00.000Z">
+<meta property="article:modified_time" content="2024-01-13T22:55:07.608Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Concurrency">
+<meta property="article:tag" content="C++">
+<meta property="article:tag" content="Memory Barrier">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://chocho-quan.github.io/images/sys.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="http://github.com/probberechts">Projects</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2023/05/07/acquire-release-fence/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2023/01/21/understanding-memory-barrier/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&text=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&is_video=false&description=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障&body=Check out this article: https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&name=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&t=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9E%E9%A1%BE%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84"><span class="toc-number">1.</span> <span class="toc-text">回顾体系结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7%E7%9A%84MESI%E5%8D%8F%E8%AE%AE"><span class="toc-number">1.1.</span> <span class="toc-text">缓存一致性的MESI协议</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Store-Buffer%E5%8F%8AInvalidate-Queue"><span class="toc-number">1.2.</span> <span class="toc-text">Store Buffer及Invalidate Queue</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%94%B1%E5%9B%9B%E7%A7%8D%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C-Memory-Barrier-%E7%9C%8B%E6%8C%87%E4%BB%A4%E9%87%8D%E6%8E%92-Instruction-Reordering-%E7%9A%84%E6%9C%AC%E8%B4%A8"><span class="toc-number">2.</span> <span class="toc-text">由四种内存屏障(Memory Barrier)看指令重排(Instruction Reordering)的本质</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#StoreStore%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C"><span class="toc-number">2.1.</span> <span class="toc-text">#StoreStore内存屏障</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#LoadLoad%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C"><span class="toc-number">2.2.</span> <span class="toc-text">#LoadLoad内存屏障</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8A%9B%E5%BC%80%E5%A4%84%E7%90%86%E5%99%A8%E8%B0%88Memory-Barrier%E7%9A%84%E4%BA%BA%E6%98%AF%E6%B5%81%E6%B0%93"><span class="toc-number">3.</span> <span class="toc-text">抛开处理器谈Memory Barrier的人是流氓</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">Quan</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2023-03-22T07:00:00.000Z" itemprop="datePublished">2023-03-22</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/C-Low-level-Concurrency/">C++ Low-level Concurrency</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link-link" href="/tags/C/" rel="tag">C++</a>, <a class="tag-link-link" href="/tags/Concurrency/" rel="tag">Concurrency</a>, <a class="tag-link-link" href="/tags/Memory-Barrier/" rel="tag">Memory Barrier</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <blockquote>
+<p>This article is partly referred to &amp; translated from <a target="_blank" rel="noopener" href="http://www.puppetmastertrading.com/images/hwViewForSwHackers.pdf">Paul’s Memory Barrier Paper</a>. Personal thoughts added.</p>
+</blockquote>
+<p><a href="https://chocho-quan.github.io/2022/11/21/understanding-memory-barrier/">上篇博客</a>，我们通过Git的想法来入门了内存屏障(memory barrier)。但是如果你仔细的研究过，你就会产生新的问题————为什么memory reorder会发生？保证两个操作之间的相对顺序，听起来这么炫酷的操作硬件是怎么实现的？本篇博客将尝试讲明白上面的问题，但它需要你拥有一定的计算机体系结构(architecture)知识，以及不少的时间。</p>
+<h2 id="回顾体系结构"><a href="#回顾体系结构" class="headerlink" title="回顾体系结构"></a>回顾体系结构</h2><h3 id="缓存一致性的MESI协议"><a href="#缓存一致性的MESI协议" class="headerlink" title="缓存一致性的MESI协议"></a>缓存一致性的MESI协议</h3><p>为了保证多核系统下的缓存一致性，计算机科学家们建立了一系列缓存一致性协议。它们非常非常复杂，我们在这讨论相对简单的MESI协议。对于每个CPU的L1-Cache的任何Cache Line，我们定义如下四种状态(State)</p>
+<ul>
+<li>Modified - 即表示此CPU改动了内存中对应的数据，且此条Cache Line为此CPU独有，不可能出现在其他CPU缓存。也因此在本Cache Line被flush之前，此CPU必须保证数据已经写入内存 &#x2F; 共享至其他Cache</li>
+<li>Exclusive - 表示此CPU独有该条Cache Line，且即将有修改进行，但此时Cache Line中的数据仍旧和主存一致</li>
+<li>Shared - 表示至少有其他一个CPU共享本条Cache Line，且Cache Line中的数据是最新的，和主存一致</li>
+<li>Invalid - 表示本Cache Line没有数据或数据无效</li>
+</ul>
+<p>同样我们需要定义协议下的6种消息</p>
+<ul>
+<li>Read - 读某个地址的数据</li>
+<li>Read Response - 回复Read消息，包含了对应地址的数据。需要注意的是，数据可以从主存而来，也可以从某个Cache而来</li>
+<li>Invalidate - 要求其他Cache删除对应地址的Cache Line</li>
+<li>Invalidate ACK - 回复Invalidate消息，表示本CPU已经删除了对应Cache Line</li>
+<li>Read Invalidate - 相当于Read + Invalidate，所以需要Read Response + Invalidate ACK的回复</li>
+<li>Writeback - 写出Modified State的数据到主存</li>
+</ul>
+<p>四种状态之间的相互转移方式(Row State -&gt; Column State)如下</p>
+<table>
+<thead>
+<tr>
+<th>From&#x2F;To</th>
+<th>Modified</th>
+<th>Exclusive</th>
+<th>Shared</th>
+<th>Invalid</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><b>Modified</b></td>
+<td>&#x2F;</td>
+<td>CPU将data写回主存并保留在Cache，需要发出Writeback信号</td>
+<td>CPU收到了其他CPU的Read消息，将data发送给对应CPU并发出Read Response</td>
+<td>CPU收到了Read Invalidate消息，需要无效化本地的data并将其send给对应CPU，发出Invalidate ACK和Read Response</td>
+</tr>
+<tr>
+<td>———–</td>
+<td>———–</td>
+<td>———–</td>
+<td>———–</td>
+<td>———–</td>
+</tr>
+<tr>
+<td><b>Exclusive</b></td>
+<td>CPU写data进入Exclusive的Cache Line</td>
+<td>&#x2F;</td>
+<td>CPU收到了其他CPU的Read消息，将data发送给对应CPU并发出Read Response</td>
+<td>其他CPU进行了类似RMW的原子操作，该CPU收到Read Invalidate消息，需回复对应ACK</td>
+</tr>
+<tr>
+<td>———–</td>
+<td>———–</td>
+<td>———–</td>
+<td>———–</td>
+<td>———–</td>
+</tr>
+<tr>
+<td><b>Shared</b></td>
+<td>CPU进行了类似RMW的原子操作，需发生Invalidate操作并等待Invalidate ACK之后完成状态变化</td>
+<td>CPU知道自己即将修改数据并发送了Invalidate操作，同样地需要等待Invalidate ACK</td>
+<td>&#x2F;</td>
+<td>其他CPU进行了Store操作，本CPU收到Invalidate消息，需回复对应ACK</td>
+</tr>
+<tr>
+<td>———–</td>
+<td>———–</td>
+<td>———–</td>
+<td>———–</td>
+<td>———–</td>
+</tr>
+<tr>
+<td><b>Invalid</b></td>
+<td>CPU进行了类似RMW的原子操作，发生Read Invalidate并等待回复</td>
+<td>CPU进行Store操作且写Miss，发送Read Invalidate并等待回复</td>
+<td>CPU进行Read操作，等待Read Response回复</td>
+<td>&#x2F;</td>
+</tr>
+</tbody></table>
+<h3 id="Store-Buffer及Invalidate-Queue"><a href="#Store-Buffer及Invalidate-Queue" class="headerlink" title="Store Buffer及Invalidate Queue"></a>Store Buffer及Invalidate Queue</h3><p>为了加速缓存，体系结构里有无数的精巧设计。想像一个如下所示的最经典的计算机体系结构层级，两个CPU，每个带有一个Cache，共享L2-Cache及内存。</p>
+<p><img src="/images/sys.png"></p>
+<p>随之而来的问题是，根据我们上面的协议，假设CPU 0需要从Cache写某个数据到内存(从Shared到Modified)，我们需要发送一个Invalidate消息。此时这个CPU只能停下自己的脚步，等待其他CPU回复Invalidate ACK，在此之前它失去了自己作为CPU的意义。那么如何减轻这个overhead呢？</p>
+<p>那么请问假设作为可爱的大学生的你有一堆deadline，可是实验室有个虽然实验还没跑但你100%确定结果的实验，需要你现在立刻告诉教授结果。你会怎么做呢？答案当然是————<font color=red><b>直接给教授发结果，实验以后再做先把ddl赶完</b></font>。CPU和Cache的优化思路也是一样：</p>
+<ul>
+<li>CPU写数据时，如果数据并非Exclusive或Modified，我们把这个操作放到一个<font color=red><b>Store Buffer</b></font>里，接着干其他的事，收到Invalidate ACK之后再进行写操作</li>
+<li>CPU收到Invalidate消息时，先不去Invalidate，只把这些放在一个<font color=red><b>Invalidate Queue</b></font>里，直接回Invalidate ACK并干其他的事，直到真正需要用到这个Cache Line时再扔掉就好</li>
+</ul>
+<p>据此，我们设计出了下面这个精巧的体系结构</p>
+<p><img src="/images/arch.png"></p>
+<p>每当CPU想要store时，我们将其先存入Store Buffer并不限期延时本次store操作(load也是同理)。而这本质上就是指令重排————并不是CPU真的把两个指令的顺序调换，而是某一个指令进入buffer并未实际执行就继续了！这也是为什么在<a href="https://chocho-quan.github.io/2022/11/21/understanding-memory-barrier/">上篇博客</a>我们说</p>
+<blockquote>
+<p>由于处理器重排(processor reordering)的存在，修改何时写入内存是未知的</p>
+</blockquote>
+<h2 id="由四种内存屏障-Memory-Barrier-看指令重排-Instruction-Reordering-的本质"><a href="#由四种内存屏障-Memory-Barrier-看指令重排-Instruction-Reordering-的本质" class="headerlink" title="由四种内存屏障(Memory Barrier)看指令重排(Instruction Reordering)的本质"></a>由四种内存屏障(Memory Barrier)看指令重排(Instruction Reordering)的本质</h2><p>接下来我们将在#LoadLoad &amp; #StoreStore的使用场景下举一个经典的例子，把整个过程break down到最底层。读完以下的小节我们就能知道到底“指令重排”这四个字意味着什么，以及为什么内存屏障不可或缺。</p>
+<h3 id="StoreStore内存屏障"><a href="#StoreStore内存屏障" class="headerlink" title="#StoreStore内存屏障"></a>#StoreStore内存屏障</h3><p>考虑以下的程序分别在系统的两个core上运行，初始<code>a = b = 0</code>且分别存在CPU 1 &#x2F; CPU 0的Cache中。</p>
+<table>
+<thead>
+<tr>
+<th>CPU 0</th>
+<th>CPU 1</th>
+<th>Cache 0</th>
+<th>Cache 1</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>a &#x3D; 1;</td>
+<td>while (b&#x3D;&#x3D;0) continue;</td>
+<td>b &#x3D; 0</td>
+<td>a &#x3D; 0</td>
+</tr>
+<tr>
+<td>b &#x3D; 1;</td>
+<td>assert(a&#x3D;&#x3D;1);</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<p>考虑以下这个运行序列：</p>
+<ul>
+<li>CPU 0执行<code>a = 1</code>，在写时发现Cache Miss<ul>
+<li>为了从Invalid状态切换为Exclusive状态，发送Read Invalidate消息</li>
+<li>如上一节所言，我们的CPU很忙碌，于是CPU 0把写操作放到了Store Buffer中，还未执行</li>
+</ul>
+</li>
+<li>CPU 1执行<code>while (b == 0)</code>，读时发现Cache Miss，发送Read消息</li>
+<li>CPU 0执行<code>b = 1</code>，写命中且<code>b</code>为Exclusive，于是直接执行</li>
+<li>CPU 0收到了CPU 1的Read消息，将<code>b = 1</code>通过Read Response发回给CPU 1</li>
+<li>CPU 1收到了Read Response，结束了循环并运行<code>assert(a==1)</code> &lt;– <font color=red><b>失败</b></font>！</li>
+<li>CPU 1收到了Read Invalidate消息，将<code>a</code>移出自己的Cache Line，可是为时已晚</li>
+</ul>
+<p>在整个上面的运行过程中，我们只字未提处理器将某两个命令<b>reorder</b>，看似一切都按顺序在进行，但是思考这整个运行过程，出现的本质问题不就是<code>a = 1</code>和<code>b = 1</code>在CPU 1的世界里反过来了吗！</p>
+<p>现在我们假设在<code>a = 1</code>和<code>b = 1</code>之间加入#StoreStore内存屏障(从这个例子里你会知道内存屏障是怎么实现的！)，上面的运行序列就会变成</p>
+<ul>
+<li>CPU 0执行<code>a = 1</code>，在写时发现Cache Miss<ul>
+<li>为了从Invalid状态切换为Exclusive状态，发送Read Invalidate消息</li>
+<li>如上一节所言，我们的CPU很忙碌，于是CPU 0把写操作放到了Store Buffer中，还未执行</li>
+</ul>
+</li>
+<li>CPU 1执行<code>while (b == 0)</code>，读时发现Cache Miss，发送Read消息</li>
+<li>CPU 0执行<code>#StoreStore()</code>内存屏障，此时CPU 0会标记Store Buffer中的值，即<code>a</code></li>
+<li>CPU 0执行<code>b = 1</code>，此时由于Store Buffer中存在标记值，该store操作再次被放入Store Buffer</li>
+<li>CPU 0收到了CPU 1的Read消息，将<code>b = 0</code>(由于<code>b = 1</code>还未执行)通过Read Response发回给CPU 1</li>
+<li>CPU 1收到了Read Response，但此时<code>while (b == 0)</code>循环成立并继续运行！</li>
+<li>CPU 1收到了Read Invalidate消息，将<code>a</code>移出自己的Cache Line，并发送Read Response &amp; Invalidate ACK</li>
+<li>CPU 0确认ACK完成<code>a = 1</code>的存储，在运行<code>b = 1</code>时再次发出Invalidate消息(由于<code>b</code>为shared)</li>
+<li>CPU 1移出<code>b = 0</code>并发送Invlidate ACK</li>
+<li>CPU 0确认ACK完成<code>b = 1</code>的存储</li>
+<li>CPU 1运行<code>while (b == 0)</code>，读时Cache Miss并发送Read消息</li>
+<li>CPU 0回复Read Response并将<code>b = 1</code>传给CPU 1</li>
+<li>CPU 1成功跳出循环并运行<code>assert(a == 1)</code> &lt;– <font color=green><b>成功</b></font>！</li>
+</ul>
+<p>内存屏障成功的阻止了“重排”！回到我们大学生的例子，你既有实验室的实验要做又有其他ddl，作为教授我的方式就是————把实验也设一个ddl，且这个ddl并不是具体的时间，而是“比你其他ddl先完成”！那么无论如何，在完成你的其他ddl之前，你都必须做完这个实验。</p>
+<h3 id="LoadLoad内存屏障"><a href="#LoadLoad内存屏障" class="headerlink" title="#LoadLoad内存屏障"></a>#LoadLoad内存屏障</h3><p>和上面类似的程序，不过这次我们已经加入了#StoreStore屏障，且<code>a</code>现在是shared状态。</p>
+<table>
+<thead>
+<tr>
+<th>CPU 0</th>
+<th>CPU 1</th>
+<th>Cache 0</th>
+<th>Cache 1</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>a &#x3D; 1;</td>
+<td>while (b&#x3D;&#x3D;0) continue;</td>
+<td>b &#x3D; 0</td>
+<td>a &#x3D; 0</td>
+</tr>
+<tr>
+<td>#StoreStore()</td>
+<td>assert(a&#x3D;&#x3D;1);</td>
+<td>a &#x3D; 0</td>
+<td></td>
+</tr>
+<tr>
+<td>b &#x3D; 1;</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<p>类似地，考虑以下的执行序列</p>
+<ul>
+<li>CPU 0执行<code>a = 1</code>，由于Cache命中，发送Invalidate消息，并将操作塞入Store Buffer</li>
+<li>CPU 1执行<code>while (b == 0)</code>，读时Cache Miss发送Read消息</li>
+<li>CPU 1收到了来自CPU 0的Invalidate消息，由于太忙碌将其放入Invalidate Queue，发送ACK</li>
+<li>CPU 0收到了Invalidate ACK并依次执行<code>a = 1</code> &#x2F; <code>#StoreStore()</code> &#x2F; <code>b = 1</code><ul>
+<li><code>a = 1</code>执行完成后，Store Buffer此时为空，<code>#StoreStore()</code>可视为NOP</li>
+<li><code>b = 1</code>发生写命中且为Exclusive，直接写入Cache</li>
+</ul>
+</li>
+<li>CPU 0收到了来自CPU 1的Read消息，将<code>b = 1</code>随Read Response传回CPU 1</li>
+<li>CPU 1收到Read Response并跳出循环，执行<code>assert(a == 1)</code> &lt;– <font color=red><b>失败</b></font>！<ul>
+<li>WHY：此时CPU 1并未执行此前的Invalidate！所以<code>a</code>仍旧在Cache 1中且值为0！</li>
+</ul>
+</li>
+<li>CPU 1执行Invalidate Queue中的消息flush缓存中的<code>a</code>，可是为时已晚</li>
+</ul>
+<p><em>注：这部分我认为论文本身写的有些问题所以有所修改，但鉴于论文作者是巨佬，我也不太敢100%保证自己正确，推荐有兴趣的读者自行翻阅论文比对，根据自己的理解选择正确的版本^^</em></p>
+<p>同样的，在整个上面的运行过程中，我们只字未提处理器将某两个命令<b>reorder</b>，但出现的本质问题还是类似的，即在CPU 1的世界里，我们先load了<code>a</code>再load的<code>b</code>！加入#LoadLoad屏障即可如同#StoreStore地解决问题，这里不再赘述(不同点就只是mark的不是Store Buffer而是Invalidate Queue罢了)。</p>
+<h2 id="抛开处理器谈Memory-Barrier的人是流氓"><a href="#抛开处理器谈Memory-Barrier的人是流氓" class="headerlink" title="抛开处理器谈Memory Barrier的人是流氓"></a>抛开处理器谈Memory Barrier的人是流氓</h2><p>我们讲了两篇博客的Memory Barrier，或许使你十分兴奋————你懂了这么多酷炫的知识！但是很不幸的是，不同的处理器的内存模型是不一样的，很多处理器其实并不需要我们考虑那么多(比如某些处理会禁止CPU那么懒，禁止#LoadLoad &#x2F; #StoreStore的重排)。而我们常见的Intel x86-64系统，是个强内存模型的系统，即我们仅仅只需要考虑#StoreLoad一种重排情况。</p>
+<p>不过不必灰心，首先在大多数你并不知道其内存模型的系统上，或者说你需要写跨平台的代码的时候，你需要它们。其次在本系列博客的最后一期大家会看到，这些知识对我们理解C++11的memory model有着很好的帮助。当然最重要的，它们很酷炫啊！</p>
+<p>详细的各个处理器的内存模型可以参考<a target="_blank" rel="noopener" href="http://www.puppetmastertrading.com/images/hwViewForSwHackers.pdf">Paul的论文</a>第七节。当然时间可能有些久远，以Intel x86-64为例则需要参考对应的<a target="_blank" rel="noopener" href="https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html">Intel 64软件开发指南</a>第八章。</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a target="_blank" rel="noopener" href="http://github.com/probberechts">Projects</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9E%E9%A1%BE%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84"><span class="toc-number">1.</span> <span class="toc-text">回顾体系结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7%E7%9A%84MESI%E5%8D%8F%E8%AE%AE"><span class="toc-number">1.1.</span> <span class="toc-text">缓存一致性的MESI协议</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Store-Buffer%E5%8F%8AInvalidate-Queue"><span class="toc-number">1.2.</span> <span class="toc-text">Store Buffer及Invalidate Queue</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%94%B1%E5%9B%9B%E7%A7%8D%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C-Memory-Barrier-%E7%9C%8B%E6%8C%87%E4%BB%A4%E9%87%8D%E6%8E%92-Instruction-Reordering-%E7%9A%84%E6%9C%AC%E8%B4%A8"><span class="toc-number">2.</span> <span class="toc-text">由四种内存屏障(Memory Barrier)看指令重排(Instruction Reordering)的本质</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#StoreStore%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C"><span class="toc-number">2.1.</span> <span class="toc-text">#StoreStore内存屏障</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#LoadLoad%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C"><span class="toc-number">2.2.</span> <span class="toc-text">#LoadLoad内存屏障</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8A%9B%E5%BC%80%E5%A4%84%E7%90%86%E5%99%A8%E8%B0%88Memory-Barrier%E7%9A%84%E4%BA%BA%E6%98%AF%E6%B5%81%E6%B0%93"><span class="toc-number">3.</span> <span class="toc-text">抛开处理器谈Memory Barrier的人是流氓</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&text=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&is_video=false&description=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障&body=Check out this article: https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&title=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&name=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://chocho-quan.github.io/2023/03/22/memory-barrier-ii/&t=内存屏障(Memory Barriers)【下】————从硬件的角度看内存屏障"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2024
+    John Doe
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="http://github.com/probberechts">Projects</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>

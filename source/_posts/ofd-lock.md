@@ -1,7 +1,7 @@
 ---
 title: Open File Description Lock简介
 author: Quan
-tag: [Linux System]
+tag: [Operating System]
 category: Operating System
 date: 2023-07-19
 ---

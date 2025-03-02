@@ -120,7 +120,7 @@ retq
 
 ## 模板的链接
 
-这一章并没有太多要说的，因为根据[gcc官方的文档](https://gcc.gnu.org/onlinedocs/gcc/Template-Instantiation.html)，链接器会检查所有translation units中的模板实例化，并且最终只保留一个，而由此你的二进制文件也不至于太大。
+这一章其实并没有太多要说的，因为根据[gcc官方的文档](https://gcc.gnu.org/onlinedocs/gcc/Template-Instantiation.html)，链接器会检查所有translation units中的模板实例化，并且最终只保留一个，而由此你的二进制文件也不至于太大。
 
 ![compile and link](./images/template.jpg)
 

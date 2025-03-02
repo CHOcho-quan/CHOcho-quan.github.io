@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="工作中又一次遇到了一个非常棘手但是有意思的问题，我们来看以下的代码 1234567891011121314151617&#x2F;&#x2F; Some simple cv implementationclass MyClass &amp;#123;     std::mutex mtx;    std::condition_variable cv;    &#x2F;&#x2F; Wait for notification    void W">
+<meta property="og:type" content="article">
+<meta property="og:title" content="条件变量(Condition Variable) Notify的底层机制">
+<meta property="og:url" content="https://chocho-quan.github.io/2025/02/27/condition-variable/index.html">
+<meta property="og:site_name" content="Quan&#39;s Μνημοσύνη">
+<meta property="og:description" content="工作中又一次遇到了一个非常棘手但是有意思的问题，我们来看以下的代码 1234567891011121314151617&#x2F;&#x2F; Some simple cv implementationclass MyClass &amp;#123;     std::mutex mtx;    std::condition_variable cv;    &#x2F;&#x2F; Wait for notification    void W">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://chocho-quan.github.io/images/cv.drawio.png">
+<meta property="og:image" content="https://chocho-quan.github.io/images/cv_expr.png">
+<meta property="article:published_time" content="2025-02-27T06:00:00.000Z">
+<meta property="article:modified_time" content="2025-03-01T23:53:06.309Z">
+<meta property="article:author" content="Quan">
+<meta property="article:tag" content="Concurrency">
+<meta property="article:tag" content="C++">
+<meta property="article:tag" content="Condition Variable">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://chocho-quan.github.io/images/cv.drawio.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>条件变量(Condition Variable) Notify的底层机制</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2024/09/15/oppenheimer/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://chocho-quan.github.io/2025/02/27/condition-variable/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://chocho-quan.github.io/2025/02/27/condition-variable/&text=条件变量(Condition Variable) Notify的底层机制"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://chocho-quan.github.io/2025/02/27/condition-variable/&title=条件变量(Condition Variable) Notify的底层机制"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://chocho-quan.github.io/2025/02/27/condition-variable/&is_video=false&description=条件变量(Condition Variable) Notify的底层机制"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=条件变量(Condition Variable) Notify的底层机制&body=Check out this article: https://chocho-quan.github.io/2025/02/27/condition-variable/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://chocho-quan.github.io/2025/02/27/condition-variable/&title=条件变量(Condition Variable) Notify的底层机制"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://chocho-quan.github.io/2025/02/27/condition-variable/&title=条件变量(Condition Variable) Notify的底层机制"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://chocho-quan.github.io/2025/02/27/condition-variable/&title=条件变量(Condition Variable) Notify的底层机制"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://chocho-quan.github.io/2025/02/27/condition-variable/&title=条件变量(Condition Variable) Notify的底层机制"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://chocho-quan.github.io/2025/02/27/condition-variable/&name=条件变量(Condition Variable) Notify的底层机制&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://chocho-quan.github.io/2025/02/27/condition-variable/&t=条件变量(Condition Variable) Notify的底层机制"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Glibc%E4%B8%AD%E7%9A%84condition-variable%E5%AE%9E%E7%8E%B0"><span class="toc-number">1.</span> <span class="toc-text">Glibc中的condition variable实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E8%AF%BBpthread-cond-signal"><span class="toc-number">1.1.</span> <span class="toc-text">一读pthread_cond_signal()</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#cv%E7%9A%84%E7%BB%93%E6%9E%84"><span class="toc-number">1.2.</span> <span class="toc-text">cv的结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%87%8D%E8%AF%BBpthread-cond-notify"><span class="toc-number">1.3.</span> <span class="toc-text">重读pthread_cond_notify()</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E8%AF%81%E6%98%8E"><span class="toc-number">2.</span> <span class="toc-text">实验证明</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Takeaways"><span class="toc-number">3.</span> <span class="toc-text">Takeaways</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Appendix"><span class="toc-number">4.</span> <span class="toc-text">Appendix</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        条件变量(Condition Variable) Notify的底层机制
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">Quan</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2025-02-27T06:00:00.000Z" itemprop="datePublished">2025-02-27</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/C-Low-level-Concurrency/">C++ Low-level Concurrency</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link-link" href="/tags/C/" rel="tag">C++</a>, <a class="tag-link-link" href="/tags/Concurrency/" rel="tag">Concurrency</a>, <a class="tag-link-link" href="/tags/Condition-Variable/" rel="tag">Condition Variable</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p>工作中又一次遇到了一个非常棘手但是有意思的问题，我们来看以下的代码</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Some simple cv implementation</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MyClass</span> &#123; </span><br><span class="line">    std::mutex mtx;</span><br><span class="line">    std::condition_variable cv;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Wait for notification</span></span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">Wait</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="function">std::unique_lock&lt;std::mutex&gt; <span class="title">lock</span><span class="params">(mtx)</span></span>;</span><br><span class="line">        cv.<span class="built_in">wait</span>(lock);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Notify one waiting thread</span></span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">Notify</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="function">std::unique_lock&lt;std::mutex&gt; <span class="title">lock</span><span class="params">(mtx)</span></span>;</span><br><span class="line">        cv.<span class="built_in">notify_one</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对熟悉condition variable(以下简称cv)的朋友来说，MyClass的实现是再简单不过的（实际情况下当然Notify中间会改动一些internal state，但总体实现就是这么简单）。那对于这么简单的一个cv实现，如果我给定如下条件：</p>
+<ol>
+<li><code>Wait()</code>会被多个线程所调用，<code>Notify()</code>只会被某一个线程调用</li>
+<li>整体CPU使用率偏高</li>
+</ol>
+<p>请问当<code>Notify()</code>被调用时，<code>Wait()</code>可能会被卡住吗？答案当然是可能的，因为CPU的resource是有限的，而背景CPU使用率偏高，所以<code>Wait()</code>会自然可能因为拿不到资源而卡住。</p>
+<p>那接下来的问题是：<code>Notify()</code>会卡住吗？</p>
+<p>我原本会理所当然地认为：当然不会！不就是发个signal吗，<code>Wait()</code>此时是yield CPU resources的，不会有任何系统操作。哪怕<code>Notify()</code>本身需要某些os level的锁，只要不被并行的调用不也没问题吗？而我们给定的情况就是：<code>Notify()</code>只会被一个线程所调用，所以也不可能会被os mutex所卡住。</p>
+<p>而答案是惊人的：在某些特定条件下，<code>Notify()</code>会卡住，而且卡住的时间竟然会和某些<code>Wait()</code>卡住的时间一致。接下来我们通过阅读Glibc的NPTL源码来一探究竟。</p>
+<p>当然TL;DR: 在使用cv时，如果有多个thread在调用<code>wait()</code>，那么<code>notify_one()</code>会因为某些<code>wait()</code>无法被schedule上而卡住。卡住的时间为<code>wait()</code>的schedule delay。</p>
+<h2 id="Glibc中的condition-variable实现"><a href="#Glibc中的condition-variable实现" class="headerlink" title="Glibc中的condition variable实现"></a>Glibc中的condition variable实现</h2><p>首先，Glibc的NPTL实现非常复杂，这篇文章不想深入讨论诸如cv的MO实现、具体的wait&#x2F;cancel，只想通过“为什么Notify()会卡住”这一个工作中实际遇到的问题作为契机，来理解这个问题本身。由此，整段源码分析不会纠结于细节，我们只关注一件事：何种情况下notify_one()会卡住。</p>
+<p>以下几章中阅读的Glibc NPTL源码版本为<a target="_blank" rel="noopener" href="https://github.com/bminor/glibc/releases/tag/glibc-2.35">glibc-2.35</a>。</p>
+<h3 id="一读pthread-cond-signal"><a href="#一读pthread-cond-signal" class="headerlink" title="一读pthread_cond_signal()"></a>一读pthread_cond_signal()</h3><p>在Linux下，<code>notify_one()</code>的实现本质是<code>pthread_cond_signal()</code>，为了探索为什么<code>notify_one()</code>会卡住，我们需要了解<code>pthread_cond_signal()</code>的实现。</p>
+<p>Again，文章只关注为什么<code>notify_one()</code>会卡住，所以不会深入讨论<code>pthread_cond_signal()</code>的实现细节。</p>
+<p>因此，我们只需要关住<code>pthread_cond_signal()</code>中哪里可能会被卡住。而阅读源码会发现代码中共有两处调用了<code>futex_wait_simple()</code>。阅读<code>futex_wait_simple()</code>的<a target="_blank" rel="noopener" href="https://man7.org/linux/man-pages/man2/futex.2.html">官方文档</a>可以发现，这个操作不是自旋的，而是会sleep。</p>
+<p>第一处的<code>futex_wait_simple()</code>来自<code>__condvar_acquire_lock()</code>，这个很好理解，因为本质上就是获取一个os level的锁，便于对一个cv的内部结构进行操作。而第二个<code>futex_wait_simple()</code>则更加耐人寻味，它隐藏在这个名叫<code>__condvar_quiesce_and_switch_g1()</code>的函数中。</p>
+<p>整个<code>pthread_cond_signal()</code>的实现非常简洁，我们会在之后的section中详细讨论。目前需要注意的有两点</p>
+<ol>
+<li>如果<code>cond-&gt;__data.__g_size[g1] == 0</code>，则<code>__condvar_quiesce_and_switch_g1()</code>会被调用，而该函数中会调用<code>futex_wait_simple()</code></li>
+<li>当且仅当<code>cond-&gt;__data.__g_size[g1] != 0</code>，或者<code>__condvar_quiesce_and_switch_g1()</code>被调用后返回true，则<code>futex_wake()</code>会被调用。</li>
+</ol>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span></span><br><span class="line">___pthread_cond_signal (<span class="type">pthread_cond_t</span> *cond) &#123;</span><br><span class="line">    <span class="comment">// Other codes omitted</span></span><br><span class="line">    <span class="comment">// Here if cond-&gt;__data.__g_size[g1] == 0, we&#x27;ll call __condvar_quiesce_and_switch_g1()</span></span><br><span class="line">    <span class="comment">// which is possible to sleep</span></span><br><span class="line">    <span class="keyword">if</span> ((cond-&gt;__data.__g_size[g1] != <span class="number">0</span>)</span><br><span class="line">        || __condvar_quiesce_and_switch_g1 (cond, wseq, &amp;g1, <span class="keyword">private</span>))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">atomic_fetch_add_relaxed</span> (cond-&gt;__data.__g_signals + g1, <span class="number">2</span>);</span><br><span class="line">        cond-&gt;__data.__g_size[g1]--;</span><br><span class="line">        do_futex_wake = <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// If we entered the if block, we will do futex_wake(), which is actually notifying the waiters</span></span><br><span class="line">    <span class="keyword">if</span> (do_futex_wake)</span><br><span class="line">        <span class="built_in">futex_wake</span> (cond-&gt;__data.__g_signals + g1, <span class="number">1</span>, <span class="keyword">private</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>那接下来我们就需要看看，第一：在这个cv的结构里，<code>__g_size</code>是什么？第二：<code>__condvar_quiesce_and_switch_g1()</code>为什么在此时调用，它要做什么？</p>
+<h3 id="cv的结构"><a href="#cv的结构" class="headerlink" title="cv的结构"></a>cv的结构</h3><p>cv的结构相当简单，注释在<code>pthread_cond_wait()</code>的实现中十分清晰。需要特别关注的只有一点，我们会发现其中重要的数据结构如:<code>__g_size</code>，<code>__g_signals</code>，<code>__g_refs</code>都是一个大小为2数组。这里的2分别代表是什么呢？</p>
+<p>再去研读<code>pthread_cond_wait()</code>的实现就会发现，整个cv的实现分成了两个组g1和g2，所有的<code>pthread_cond_wait()</code>都会先被分到g2，而<code>pthread_cond_signal()</code>永远只会给g1的waiters发送信号唤醒。而当g1中没有waiters的时候，<code>pthread_cond_signal()</code>会调用<code>__condvar_quiesce_and_switch_g1()</code>，将g1和g2互换。</p>
+<p><img src="/images/cv.drawio.png" alt="cv"></p>
+<p>这样的实现有一个最大的好处：简单。当<code>pthread_cond_wait()</code>被调用时，它只需要将waiter扔到g2，然后等待notify对它进行操作。而当<code>pthread_cond_signal()</code>被调用时，它只需要处理g1，并行的数据结构不至于很多，实现起来方便得多。</p>
+<p>可是Concurrency问题会在g1为空，但是g2不为空的时候到来：我们需要安全的处理g2和g1的切换。自然我们知道要加锁，可是下一个问题是，假设切换的时候g1中存在一些waiters，它们虽然已经被signal了，但是因为各种原因没有被唤醒，我们要怎么办？</p>
+<p>直接冒在脑子里的最简单的做法是：强行直接交换。反正G1中的waiter已经被signal过了，能不能被唤醒取决于操作系统，我不需要再担心。</p>
+<p>要回答这个问题，我们需要来仔细看看cond_var中的结构</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">__pthread_cond_s</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="comment">// Other codes omitted</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">int</span> __g_refs[<span class="number">2</span>] __LOCK_ALIGNMENT; <span class="comment">// size of waiters WIP, will decrease once a thread is waked up</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">int</span> __g_size[<span class="number">2</span>]; <span class="comment">// size of current waiters in each group, will decrease once signal is sent</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">int</span> __g_signals[<span class="number">2</span>]; <span class="comment">// signals for each group</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>在这个实现中，<code>__g_signals</code>存储的是一个真正的futex word，而与之共用的是<code>__g_refs</code>中存储了所有目前还在引用这个futex word的线程。如果强行交换，会导致可能存在大量的线程持有这一futex word，唤醒过后都会大量改动 &#x2F; 使用其中的数据，最终导致可能的的ABA问题，足以想象其中实现的困难。</p>
+<p>而glic最后的实现方式就是，如果g1存在一些waiters并没有被唤醒，则需要notify等候直到它被唤醒。接下来我们重新进入<code>pthread_cond_notify()</code>，来理解其中具体的实现。</p>
+<h3 id="重读pthread-cond-notify"><a href="#重读pthread-cond-notify" class="headerlink" title="重读pthread_cond_notify()"></a>重读pthread_cond_notify()</h3><p>这一次我们从第一个condition开始，然后深入<code>__condvar_quiesce_and_switch_g1()</code>的实现，看看我们的理解是否正确。最重要的<code>if</code>条件如下</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> ((cond-&gt;__data.__g_size[g1] != <span class="number">0</span>)</span><br><span class="line">    || __condvar_quiesce_and_switch_g1 (cond, wseq, &amp;g1, <span class="keyword">private</span>))</span><br></pre></td></tr></table></figure>
+
+<p>第一个condition <code>__g_size[g1] != 0</code>如我们上面所想，即g1内已经没有了正在等待的waiter。因为如果g1存在waiters，那么notify要做的事情非常简单，直接send信号唤醒即可。而如果g1里已经没有了任何waiters，接下来要做的就是交换g1 &#x2F; g2，也就是<code>__condvar_quiesce_and_switch_g1()</code>所做的事情。</p>
+<p>我们直接来读其中调用<code>futex_wait_simple()</code>的段落，来看具体到底是什么条件会使得notify的thread被Block住。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Fetch __g_refs[g1]</span></span><br><span class="line"><span class="type">unsigned</span> r = <span class="built_in">atomic_fetch_or_release</span> (cond-&gt;__data.__g_refs + g1, <span class="number">0</span>);</span><br><span class="line"><span class="keyword">while</span> ((r &gt;&gt; <span class="number">1</span>) &gt; <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="comment">// Spin for some time to see if __g_refs get changed</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">unsigned</span> <span class="type">int</span> spin = maxspin; ((r &gt;&gt; <span class="number">1</span>) &gt; <span class="number">0</span>) &amp;&amp; (spin &gt; <span class="number">0</span>); spin--) &#123;</span><br><span class="line">	  r = <span class="built_in">atomic_load_relaxed</span> (cond-&gt;__data.__g_refs + g1);</span><br><span class="line">	&#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> ((r &gt;&gt; <span class="number">1</span>) &gt; <span class="number">0</span>) &#123;</span><br><span class="line">	  r = <span class="built_in">atomic_fetch_or_relaxed</span> (cond-&gt;__data.__g_refs + g1, <span class="number">1</span>) | <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">	  <span class="keyword">if</span> ((r &gt;&gt; <span class="number">1</span>) &gt; <span class="number">0</span>)</span><br><span class="line">	    <span class="built_in">futex_wait_simple</span> (cond-&gt;__data.__g_refs + g1, r, <span class="keyword">private</span>);</span><br><span class="line">	  <span class="comment">/* Reload here so we eventually see the most recent value even if we</span></span><br><span class="line"><span class="comment">	     do not spin.   */</span></span><br><span class="line">	  r = <span class="built_in">atomic_load_relaxed</span> (cond-&gt;__data.__g_refs + g1);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>本质上就是判断<code>__g_refs[g1]</code>是否大于0 ———— 即有没有一个thread是被signal过，却没有唤醒的（之所以<code>r &gt;&gt; 1</code>是因为<code>__g_refs</code>的第一位是另有作用的，从第二位开始表达是否有thread仍在引用futex）。</p>
+<p>合二为一，总结而言就是在以下条件满足时，<code>notify_one()</code>有可能会跑的很慢</p>
+<ul>
+<li>有一个waiting thread已经被signal过了，但由于各种原因(如CPU资源不够)没有被唤醒</li>
+<li>有一个waiting thread是在上一个signal后开始wait(g2)</li>
+</ul>
+<h2 id="实验证明"><a href="#实验证明" class="headerlink" title="实验证明"></a>实验证明</h2><p>由此我们就可以用实验证明我们的理论，这个程序也极其容易写(见附录)，只要在强行使用<code>taskset -c 11 chrt -f 25 stress-ng -c 11 -l 100</code>卡死一个核，接着把waiting thread绑定在这个核上，这可以手动构造出signal但是没有醒的情况。在第二个notify调用之前，再开一个新的waiting thread(使其加入g2)，最终就可以得到实验结果如下<br><img src="/images/cv_expr.png"></p>
+<h2 id="Takeaways"><a href="#Takeaways" class="headerlink" title="Takeaways"></a>Takeaways</h2><p>到这里，我们就可以得出一些使用cv的principle</p>
+<ul>
+<li>waiting thread需要有比较高的priority，使得它们可以被及时schedule上</li>
+<li>一对一的cv使用wait - notify会是最好的方式，如果有多个thread，可以尝试使用多个cv</li>
+</ul>
+<h2 id="Appendix"><a href="#Appendix" class="headerlink" title="Appendix"></a>Appendix</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Test</span> &#123;</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">   std::condition_variable cv;</span><br><span class="line">   std::mutex mtx;</span><br><span class="line">   <span class="type">bool</span> flag = <span class="literal">false</span>;</span><br><span class="line">   std::thread thread;</span><br><span class="line">   std::thread thread2;</span><br><span class="line"></span><br><span class="line">   <span class="built_in">Test</span>() &#123;</span><br><span class="line">     thread = std::<span class="built_in">thread</span>([<span class="keyword">this</span>]() &#123;</span><br><span class="line">       <span class="keyword">auto</span> start = std::chrono::system_clock::<span class="built_in">now</span>();</span><br><span class="line">       <span class="keyword">while</span> (std::chrono::<span class="built_in">duration_cast</span>&lt;std::chrono::minutes&gt;(std::chrono::system_clock::<span class="built_in">now</span>() - start).<span class="built_in">count</span>() &lt; <span class="number">60</span>) &#123;</span><br><span class="line">         std::unique_lock&lt;std::mutex&gt; <span class="built_in">lk</span>(mtx);</span><br><span class="line">         cv.<span class="built_in">wait</span>(lk, [<span class="keyword">this</span>]() &#123; <span class="keyword">return</span> flag; &#125;);</span><br><span class="line">         <span class="keyword">break</span>;</span><br><span class="line">       &#125;</span><br><span class="line">       std::cout &lt;&lt; <span class="string">&quot;thread1 done&quot;</span> &lt;&lt; std::endl;</span><br><span class="line">     &#125;);</span><br><span class="line"></span><br><span class="line">     <span class="comment">// Bind it to CPU 11, and stress CPU 11 with 100% Util and FIFO policy with HIGH priority</span></span><br><span class="line">     <span class="built_in">pthread_setname_np</span>(thread.<span class="built_in">native_handle</span>(), <span class="string">&quot;test_thread&quot;</span>);</span><br><span class="line">     <span class="type">cpu_set_t</span> cpu_set;</span><br><span class="line">     <span class="built_in">CPU_ZERO</span>(&amp;cpu_set);</span><br><span class="line">     <span class="built_in">CPU_SET</span>(<span class="number">11</span>, &amp;cpu_set);</span><br><span class="line">     <span class="built_in">pthread_setaffinity_np</span>(thread.<span class="built_in">native_handle</span>(), <span class="built_in">sizeof</span>(<span class="type">cpu_set_t</span>), &amp;cpu_set);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="type">void</span> <span class="title">CreateThread2</span><span class="params">()</span> </span>&#123;</span><br><span class="line">     thread2 = std::<span class="built_in">thread</span>([<span class="keyword">this</span>]() &#123;</span><br><span class="line">       <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">         std::unique_lock&lt;std::mutex&gt; <span class="built_in">lk</span>(mtx);</span><br><span class="line">         cv.<span class="built_in">wait</span>(lk, [<span class="keyword">this</span>]() &#123; <span class="keyword">return</span> flag; &#125;);</span><br><span class="line">         flag = <span class="literal">false</span>;</span><br><span class="line">         <span class="keyword">break</span>;</span><br><span class="line">       &#125;</span><br><span class="line">       std::cout &lt;&lt; <span class="string">&quot;thread2 done&quot;</span> &lt;&lt; std::endl;</span><br><span class="line">     &#125;);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   ~<span class="built_in">Test</span>() &#123;</span><br><span class="line">     thread.<span class="built_in">join</span>();</span><br><span class="line">     <span class="keyword">if</span> (thread2.<span class="built_in">joinable</span>()) &#123;</span><br><span class="line">       thread2.<span class="built_in">join</span>();</span><br><span class="line">     &#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="type">void</span> <span class="title">Notify</span><span class="params">()</span> </span>&#123;</span><br><span class="line">     mtx.<span class="built_in">lock</span>();</span><br><span class="line">     flag = <span class="literal">true</span>;</span><br><span class="line">     mtx.<span class="built_in">unlock</span>();</span><br><span class="line"></span><br><span class="line">     cv.<span class="built_in">notify_one</span>();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span>* argv[])</span> </span>&#123;</span><br><span class="line"> <span class="comment">// Thread 1 will go to cv g1</span></span><br><span class="line"> Test test;</span><br><span class="line"> std::this_thread::<span class="built_in">sleep_for</span>(std::chrono::<span class="built_in">milliseconds</span>(<span class="number">1000</span>));</span><br><span class="line"></span><br><span class="line"> <span class="keyword">auto</span> test_start = std::chrono::system_clock::<span class="built_in">now</span>();</span><br><span class="line"> <span class="comment">// We try to make thread1 not able to be waked up</span></span><br><span class="line"> <span class="comment">// Notify will decrease __g_size[g1] while __g_refs[g1] is still 1</span></span><br><span class="line"> test.<span class="built_in">Notify</span>();</span><br><span class="line"> <span class="keyword">auto</span> test_end = std::chrono::system_clock::<span class="built_in">now</span>();</span><br><span class="line"> <span class="keyword">auto</span> cnt = std::chrono::<span class="built_in">duration_cast</span>&lt;std::chrono::milliseconds&gt;(test_end - test_start).<span class="built_in">count</span>();</span><br><span class="line"> std::cout &lt;&lt; <span class="string">&quot;test time: &quot;</span> &lt;&lt; cnt &lt;&lt; <span class="string">&quot;ms&quot;</span> &lt;&lt; std::endl;</span><br><span class="line"></span><br><span class="line"> std::this_thread::<span class="built_in">sleep_for</span>(std::chrono::<span class="built_in">milliseconds</span>(<span class="number">100</span>));</span><br><span class="line"> test.flag = <span class="literal">false</span>;</span><br><span class="line"> <span class="comment">// New waiters would go to g2</span></span><br><span class="line"> test.<span class="built_in">CreateThread2</span>();</span><br><span class="line"> std::this_thread::<span class="built_in">sleep_for</span>(std::chrono::<span class="built_in">milliseconds</span>(<span class="number">100</span>));</span><br><span class="line"> test_start = std::chrono::system_clock::<span class="built_in">now</span>();</span><br><span class="line"> <span class="comment">// For this notify, thread2 is waiting in g2, cv will try to switch group</span></span><br><span class="line"> <span class="comment">// However, thread1 is still in g1 (not woken up), thus this notify would run for a long time</span></span><br><span class="line"> test.<span class="built_in">Notify</span>();</span><br><span class="line"> test_end = std::chrono::system_clock::<span class="built_in">now</span>();</span><br><span class="line"> cnt = std::chrono::<span class="built_in">duration_cast</span>&lt;std::chrono::milliseconds&gt;(test_end - test_start).<span class="built_in">count</span>();</span><br><span class="line"> std::cout &lt;&lt; <span class="string">&quot;test time: &quot;</span> &lt;&lt; cnt &lt;&lt; <span class="string">&quot;ms&quot;</span> &lt;&lt; std::endl;</span><br><span class="line"> <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Glibc%E4%B8%AD%E7%9A%84condition-variable%E5%AE%9E%E7%8E%B0"><span class="toc-number">1.</span> <span class="toc-text">Glibc中的condition variable实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E8%AF%BBpthread-cond-signal"><span class="toc-number">1.1.</span> <span class="toc-text">一读pthread_cond_signal()</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#cv%E7%9A%84%E7%BB%93%E6%9E%84"><span class="toc-number">1.2.</span> <span class="toc-text">cv的结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%87%8D%E8%AF%BBpthread-cond-notify"><span class="toc-number">1.3.</span> <span class="toc-text">重读pthread_cond_notify()</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E8%AF%81%E6%98%8E"><span class="toc-number">2.</span> <span class="toc-text">实验证明</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Takeaways"><span class="toc-number">3.</span> <span class="toc-text">Takeaways</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Appendix"><span class="toc-number">4.</span> <span class="toc-text">Appendix</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://chocho-quan.github.io/2025/02/27/condition-variable/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://chocho-quan.github.io/2025/02/27/condition-variable/&text=条件变量(Condition Variable) Notify的底层机制"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://chocho-quan.github.io/2025/02/27/condition-variable/&title=条件变量(Condition Variable) Notify的底层机制"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://chocho-quan.github.io/2025/02/27/condition-variable/&is_video=false&description=条件变量(Condition Variable) Notify的底层机制"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=条件变量(Condition Variable) Notify的底层机制&body=Check out this article: https://chocho-quan.github.io/2025/02/27/condition-variable/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://chocho-quan.github.io/2025/02/27/condition-variable/&title=条件变量(Condition Variable) Notify的底层机制"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://chocho-quan.github.io/2025/02/27/condition-variable/&title=条件变量(Condition Variable) Notify的底层机制"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://chocho-quan.github.io/2025/02/27/condition-variable/&title=条件变量(Condition Variable) Notify的底层机制"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://chocho-quan.github.io/2025/02/27/condition-variable/&title=条件变量(Condition Variable) Notify的底层机制"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://chocho-quan.github.io/2025/02/27/condition-variable/&name=条件变量(Condition Variable) Notify的底层机制&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://chocho-quan.github.io/2025/02/27/condition-variable/&t=条件变量(Condition Variable) Notify的底层机制"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2025
+    Quan
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>

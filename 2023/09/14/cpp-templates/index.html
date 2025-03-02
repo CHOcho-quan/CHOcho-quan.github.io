@@ -14,9 +14,9 @@
 <meta property="og:description" content="最近在工作中又遇到了个很大的问题，我在编译自己写的某个库的时候，时间异常地长，如果选择make的线程数量太多（make -j8之类的）甚至会因为内存原因被kill。编译时间也就算了，我左思右想到底哪里会让一个编译的过程需要那么多的内存，整整8G是怎么被编译吃满的。最后我的目光落在了一些模板类上，也由此对模板了解得更加深刻了些。这篇博客主要关注的不是模板的用法，什么继承模板类啦、Non-type模板">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://chocho-quan.github.io/images/template.jpg">
-<meta property="article:published_time" content="2023-09-14T07:00:00.000Z">
-<meta property="article:modified_time" content="2024-01-13T22:55:07.608Z">
-<meta property="article:author" content="John Doe">
+<meta property="article:published_time" content="2023-09-14T05:00:00.000Z">
+<meta property="article:modified_time" content="2025-02-27T22:03:08.379Z">
+<meta property="article:author" content="Quan">
 <meta property="article:tag" content="C++">
 <meta property="article:tag" content="Template">
 <meta name="twitter:card" content="summary">
@@ -131,7 +131,7 @@
       
     <div class="postdate">
       
-        <time datetime="2023-09-14T07:00:00.000Z" itemprop="datePublished">2023-09-14</time>
+        <time datetime="2023-09-14T05:00:00.000Z" itemprop="datePublished">2023-09-14</time>
         
       
     </div>
@@ -188,7 +188,7 @@
 </blockquote>
 <p>当你理解了模板的编译，你就不难理解Instantiation Model的合理性了————该文件中拥有了definition &amp; declaration，所以它可以随意地实例化模板类。而由于它已经实例化了模板类，与它链接的文件如果用到的是同样的实例化的模板类，就不会有找不到定义的问题了。到这儿也不难看出两者的优劣，Inclusion Model的问题就是我所遇到的内存、编译时间爆炸的问题，而Explicit Instantiation则太难去完整的考虑你到底需要用到哪些实例化的模板，还容易在不同的文件中重复定义，但却满足了隐藏模板类实现、编译加速的条件。</p>
 <p>但讲到这里，又会带来下一个问题，每个源文件都带这样一份拷贝，假设我有好几份源文件都实例化了<code>Foo&lt;int&gt;</code>，那链接在一起岂不是就重复定义了吗？下一章我们来讲链接器的操作。</p>
-<h2 id="模板的链接"><a href="#模板的链接" class="headerlink" title="模板的链接"></a>模板的链接</h2><p>这一章并没有太多要说的，因为根据<a target="_blank" rel="noopener" href="https://gcc.gnu.org/onlinedocs/gcc/Template-Instantiation.html">gcc官方的文档</a>，链接器会检查所有translation units中的模板实例化，并且最终只保留一个，而由此你的二进制文件也不至于太大。</p>
+<h2 id="模板的链接"><a href="#模板的链接" class="headerlink" title="模板的链接"></a>模板的链接</h2><p>这一章其实并没有太多要说的，因为根据<a target="_blank" rel="noopener" href="https://gcc.gnu.org/onlinedocs/gcc/Template-Instantiation.html">gcc官方的文档</a>，链接器会检查所有translation units中的模板实例化，并且最终只保留一个，而由此你的二进制文件也不至于太大。</p>
 <p><img src="/./images/template.jpg" alt="compile and link"></p>
 <h2 id="模板特化"><a href="#模板特化" class="headerlink" title="模板特化"></a>模板特化</h2><p>特化的模板是什么呢？很显然已经不可能再是我们前面所说的一种“宏类似物”了，它就是一个函数模板的实例化，链接器会把它当成一个普通的函数处理。这也是为什么如果你使用的是Inclusion Model，特化模板函数前面必须要加上一个inline关键字，否则就会违反<a href="#a1-one-definition-rule">ODR</a>。</p>
 <p>最后讲一个与今天想讲的模板编译并没有太大关系的小技巧，也算是在这次project中学到的一点东西吧。当你需要特化一些模板，可是特化的模板函数明明和大众的模板函数有大量的重复，如何节省代码呢？<a target="_blank" rel="noopener" href="https://isocpp.org/wiki/faq/templates#template-specialization-piecemeal">C++官方的模板文章</a>里讲到，我们应该把公用的部分放到一个公共的parent函数里，specialization中只做小部分不同的codes。</p>
@@ -262,7 +262,7 @@
     
     
     2016-2025
-    John Doe
+    Quan
   </div>
   <div class="footer-right">
     <nav>

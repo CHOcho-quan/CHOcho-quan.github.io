@@ -16,7 +16,7 @@
 <meta property="og:image" content="https://chocho-quan.github.io/images/cv.drawio.png">
 <meta property="og:image" content="https://chocho-quan.github.io/images/cv_expr.png">
 <meta property="article:published_time" content="2025-02-27T06:00:00.000Z">
-<meta property="article:modified_time" content="2025-03-01T23:53:06.309Z">
+<meta property="article:modified_time" content="2025-03-02T06:47:36.689Z">
 <meta property="article:author" content="Quan">
 <meta property="article:tag" content="Concurrency">
 <meta property="article:tag" content="C++">
@@ -208,7 +208,7 @@
 <li>有一个waiting thread是在上一个signal后开始wait(g2)</li>
 </ul>
 <h2 id="实验证明"><a href="#实验证明" class="headerlink" title="实验证明"></a>实验证明</h2><p>由此我们就可以用实验证明我们的理论，这个程序也极其容易写(见附录)，只要在强行使用<code>taskset -c 11 chrt -f 25 stress-ng -c 11 -l 100</code>卡死一个核，接着把waiting thread绑定在这个核上，这可以手动构造出signal但是没有醒的情况。在第二个notify调用之前，再开一个新的waiting thread(使其加入g2)，最终就可以得到实验结果如下<br><img src="/images/cv_expr.png"></p>
-<h2 id="Takeaways"><a href="#Takeaways" class="headerlink" title="Takeaways"></a>Takeaways</h2><p>到这里，我们就可以得出一些使用cv的principle</p>
+<h2 id="Takeaways"><a href="#Takeaways" class="headerlink" title="Takeaways"></a>Takeaways</h2><p>到这里，我们就可以总结得出一些使用cv的principle</p>
 <ul>
 <li>waiting thread需要有比较高的priority，使得它们可以被及时schedule上</li>
 <li>一对一的cv使用wait - notify会是最好的方式，如果有多个thread，可以尝试使用多个cv</li>
